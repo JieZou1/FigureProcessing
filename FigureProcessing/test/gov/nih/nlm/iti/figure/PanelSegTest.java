@@ -61,6 +61,39 @@ public class PanelSegTest
 		}
 		
 		System.out.println("Complete!");
-		
 	}
+	
+	public static void main(String[] args) throws Exception 
+	{
+		//Check Args
+		if (args.length != 3)
+		{
+			System.out.println("Usage: 	java -jar PanelSegTest.jar <method> <test image folder> <result image folder>");
+			System.out.println("method:");
+			System.out.println("		Jaylene		Jaylene's method based on cross uniform band");
+			System.out.println("		Santosh		Santosh's method based on long line segments");
+			return;
+		}
+		
+		String method = args[0], src_folder = args[1], rst_folder = args[2];
+		PanelSeg segmentor = null;
+		switch (method) 
+		{
+		case "Jaylene":
+			segmentor = new PanelSegJaylene();
+			break;
+
+		case "Santosh":
+			segmentor = new PanelSegSantosh();
+			break;
+			
+		default:
+			System.out.println(method + " is not known.");
+			return;
+		}
+		
+		PanelSegTest test = new PanelSegTest();
+		test.Test(args[0], args[1], segmentor);
+	}
+	
 }
