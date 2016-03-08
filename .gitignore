@@ -18,6 +18,7 @@ local.properties
 temp/
 jar/
 doc/
+.recommenders/
 
 # External tool builders
 .externalToolBuilders/
