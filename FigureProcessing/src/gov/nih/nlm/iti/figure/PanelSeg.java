@@ -34,7 +34,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	 * @param image
 	 * @throws Exception
 	 */
-	public void segment(Mat image) throws Exception
+	public void segment(Mat image) 
 	{
 		figure = new Figure(image);	//Construct a figure object for saving processing results
 		figure.imageGray = new Mat();		cvtColor(figure.image, figure.imageGray, CV_BGR2GRAY);
@@ -45,7 +45,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	 * It simply loads the image from the file, and then calls segment(Mat image) function.
 	 * Call getSegmentationResult* functions to retrieve result in different format.
 	 */
-	public void segment(String image_file_path) throws Exception
+	public void segment(String image_file_path) 
 	{
 		Mat image = imread(image_file_path, CV_LOAD_IMAGE_COLOR);
 		segment(image);		

@@ -7,7 +7,7 @@ import org.bytedeco.javacpp.opencv_features2d.MSER;
 
 class PanelSegLabelRegMSER extends PanelSeg 
 {
-	public void segment(Mat image) throws Exception 
+	public void segment(Mat image)  
 	{
 		super.segment(image);
 		
