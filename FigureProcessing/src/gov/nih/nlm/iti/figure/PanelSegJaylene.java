@@ -4,12 +4,12 @@ import static org.bytedeco.javacpp.opencv_imgcodecs.CV_LOAD_IMAGE_COLOR;
 import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
 
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 import org.bytedeco.javacpp.opencv_core.Mat;
 
 import gov.nih.nlm.iti.panelSegmentation.regular.segmentation.PanelSplitter;
-import weka.core.mathematicalexpression.sym;
 
 /**
  * A wrapper class on top of PanelSplitter class implemented by Jaylene in panelSegmentationModule.jar 
@@ -19,18 +19,16 @@ import weka.core.mathematicalexpression.sym;
  */
 public final class PanelSegJaylene extends PanelSeg
 {
-	/**
-	 * The main entrance function to perform segmentation.
-	 * Call getResult* functions to retrieve result in different format.
-	 */
-	public void segment(String image_file_path) 
+	//private String imageFilePath;
+	private Mat matImage;
+	private BufferedImage bufferedImage;
+	
+	private void segment()
 	{
-		Mat image = imread(image_file_path, CV_LOAD_IMAGE_COLOR);
-		//Mat image = super.loadImageAsBGR(image_file_path);
-		figure = new Figure(image);	//Construct a figure object for saving processing results
+		figure = new Figure(matImage);	//Construct a figure object for saving processing results
 		figure.segmentationResult = new ArrayList<PanelSegResult>();
 
-		PanelSplitter extractPanel = new PanelSplitter(image_file_path);	//Construct Jaylene's panel object for calling her segmentation method
+		PanelSplitter extractPanel = new PanelSplitter(bufferedImage);	//Construct Jaylene's panel object for calling her segmentation method
 		extractPanel.removeLabel();
 		ArrayList<Rectangle> rects = extractPanel.extract();
 
@@ -41,17 +39,40 @@ public final class PanelSegJaylene extends PanelSeg
 			figure.segmentationResult.add(panel);
 		}
 	}
+	
+	/**
+	 * The main entrance function to perform segmentation.
+	 * Call getResult* functions to retrieve result in different format.
+	 */
+	public void segment(String image_file_path) 
+	{
+		matImage = imread(image_file_path, CV_LOAD_IMAGE_COLOR);
+		bufferedImage = Algorithm.mat2BufferdImg(matImage);
+
+		segment();
+	}
 
 	/**
 	 * The main entrance function to perform segmentation.
 	 * Call getResult* functions to retrieve result in different format.
 	 *  
-	 * NOTICE: I have not found the best way to convert Mat to BufferedImage, such that we could construct a PanelSplitter from Mat.
-	 * So, for now we have to rely on the PanelSplitter's ctor, which accept a file path.
+	 */
+	public void segment(BufferedImage image)
+	{
+		matImage = Algorithm.bufferdImg2Mat(image);
+		bufferedImage = Algorithm.mat2BufferdImg(matImage);
+		segment();
+	}
+	
+	/**
+	 * The main entrance function to perform segmentation.
+	 * Call getResult* functions to retrieve result in different format.
+	 *  
 	 */
 	public void segment(Mat image)
 	{
-		//throw new Exception("Not implemented yet");
+		matImage = image;
+		bufferedImage = Algorithm.mat2BufferdImg(image);
+		segment();
 	}
-
 }

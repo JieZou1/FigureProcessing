@@ -28,7 +28,7 @@ public final class PanelSegSantosh extends PanelSeg
 	 * Call getResult* functions to retrieve result in different format.
 	 * @throws Exception 
 	 */
-	synchronized public void segment(Mat image)  
+	public void segment(Mat image)  
 	{		
 		super.segment(image);
 		
@@ -44,7 +44,7 @@ public final class PanelSegSantosh extends PanelSeg
 	 * Get the segmentation result by drawing the panel boundaries on the image
 	 * @return the image with panel boundaries superimposed on it.
 	 */
-	synchronized public Mat getSegmentationResultInMat() 
+	public Mat getSegmentationResultInMat() 
 	{
 		return super.getSegmentationResultInMat();
 //		Mat img = new Mat();		cvtColor(imagePreprocessed, img, CV_GRAY2BGR);

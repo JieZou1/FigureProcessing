@@ -27,12 +27,13 @@ enum Orientation { Horizontal, Vertical }
 public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm 
 {
 	/**
-	 * Some common initialization functions for all panel segmentation algorithms, including: <p>
+	 * Some common initialization functions for all extended panel segmentation algorithms, including: <p>
 	 * 1. Construct Figure object, figure <p>
 	 * 2. Generate gray image, imageGray <p>
 	 * 3. Construct segmentation result, segmentationResult.
+	 * 
+	 * Generally, the segment function of all extended classes should call this super class function 
 	 * @param image
-	 * @throws Exception
 	 */
 	public void segment(Mat image) 
 	{
@@ -55,13 +56,15 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	 * The entrance function to perform segmentation.
 	 * Call getSegmentationResult* functions to retrieve result in different format.
 	 * It simply converts the buffered image to Mat, and then calls segment(Mat image) function.
+	 * 
+	 * NOTICE: because converting from BufferedImage to Mat requires actual copying of the image data, it is inefficient.  
+	 * It is recommended to avoid using this function if Mat type can be used.
 	 *  
-	 * NOTICE: I have not found the best way to convert BufferedImage to Mat (BGR) yet.
-	 * So, this function is not ready yet.
 	 */
 	public void segment(BufferedImage buffered_image) throws Exception
 	{
-		throw new Exception("Not implemented yet");		
+		Mat image = Algorithm.bufferdImg2Mat(buffered_image);
+		segment(image);
 	}
 	
 	/**
