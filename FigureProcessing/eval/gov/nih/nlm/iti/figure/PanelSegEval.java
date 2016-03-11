@@ -2,8 +2,6 @@ package gov.nih.nlm.iti.figure;
 
 import static org.bytedeco.javacpp.opencv_imgcodecs.imwrite;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -12,8 +10,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.concurrent.*;
-
-import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.javacpp.opencv_core.Mat;
@@ -48,16 +44,7 @@ class PanelSegTask extends RecursiveAction
 		{
 			for (int i = start; i < end; i++)
 			{
-				Path path = segEval.allPaths.get(i);
-				PanelSeg segmentor = segEval.segmentors.get(i);
-				try 
-				{
-					segEval.segment(segmentor, path);
-				} catch (Exception e) 
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				segEval.segment(i);
 			}
 		}
 		else
@@ -82,7 +69,7 @@ public class PanelSegEval
 	 * @param srcFolder	The source folder
 	 * @param rstFolder	The result folder
 	 */
-	PanelSegEval(String method, Path srcFolder, Path rstFolder) 
+	PanelSegEval(String method, Path srcFolder, Path rstFolder, Path evaluationFile) 
 	{
 		this.srcFolder = srcFolder;		this.rstFolder = rstFolder;
 
@@ -114,22 +101,75 @@ public class PanelSegEval
 //		xStream.alias("Rectangle", Rectangle.class);		
 	}
 	
+	void loadPanelSegResult() throws Exception
+	{
+		ArrayList<String> allXMLPaths = new ArrayList<String>();
+		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(rstFolder)) 
+		{			
+			for (Path path : dirStrm)
+			{
+				String filename = path.toString();
+				if (!filename.endsWith(".xml")) continue;
+				allXMLPaths.add(filename);
+			}
+		}
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		for (int i = 0; i < allXMLPaths.size(); i++)
+		{
+			PanelSeg.loadPanelSegResult(allXMLPaths.get(i));
+		}
+	}
+	
+	ArrayList<ArrayList<PanelSegResult>> LoadPanelSegGt() throws Exception
+	{
+		ArrayList<String> allXMLPaths = new ArrayList<String>();
+		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(this.srcFolder)) 
+		{			
+			for (Path path : dirStrm)
+			{
+				String filename = path.toString();
+				if (!filename.endsWith(".xml")) continue;
+				allXMLPaths.add(filename);
+			}
+		}
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		ArrayList<ArrayList<PanelSegResult>> gtPanels = new ArrayList<ArrayList<PanelSegResult>>();		
+		for (int i = 0; i < allXMLPaths.size(); i++)
+		{
+			ArrayList<PanelSegResult> panels = PanelSeg.LoadPanelSegGt(allXMLPaths.get(i));
+		}
+		return gtPanels;
+	}
+	
 	/**
 	 * Panel Segmentation for a figure
 	 * @param path The figure file to be segmented.
 	 */
-	void segment(PanelSeg segmentor, Path path) 
+	void segment(int i) 
 	{
+		Path path = allPaths.get(i);		PanelSeg segmentor = segmentors.get(i);
+		
+		// 1. Do Segmentation
 		String filename = path.toString();
 		System.out.println("Processing "+ filename);
 		segmentor.segment(filename);
 
-		//Save result in images
+		// 2.1 Save result in images
 		Mat img_result = segmentor.getSegmentationResultInMat();
 		String img_file = rstFolder.resolve(path.getFileName()).toString();
 		imwrite(img_file, img_result);
 		
-		//Save result in xml files
+		// 2.2 Save result in xml files
 		ArrayList<PanelSegResult> xml_result = segmentor.getSegmentationResult();
 		String xml = xStream.toXML(xml_result);
 		String xml_file = rstFolder.resolve(path.getFileName()).toString().replace(".jpg", ".xml");
@@ -145,11 +185,11 @@ public class PanelSegEval
 	}
 	
 	/**
-	 * Do evaluation in multi-threads. Use seqThreshold to control how many tasks would be processed sequentially.
+	 * Do segmentation in multi-threads. Use seqThreshold to control how many tasks would be processed sequentially.
 	 * The smaller the seqThreshold, the more tasks are parallel processed.
 	 * @param seqThreshold
 	 */
-	public void evalMultiThreads(int seqThreshold)
+	public void segMultiThreads(int seqThreshold)
 	{
 //		int level = ForkJoinPool.getCommonPoolParallelism();
 //		int cores = Runtime.getRuntime().availableProcessors();
@@ -157,20 +197,18 @@ public class PanelSegEval
 		PanelSegTask task = new PanelSegTask(this, 0, allPaths.size(), seqThreshold);
 		task.invoke();
 		System.out.println("Processing Completed!");
-		
 	}
 	
 	/**
-	 * Do evaluation in a single thread.  Not very useful.
-	 * Use large seqThreshold value, in evalMultiThreads, can accomplish evalSingleThread
+	 * Do segmentation in a single thread.  Not very useful.
+	 * Use large seqThreshold value, in segMultiThreads, can accomplish segSingleThread
 	 */
-	public void evalSingleThread() 
+	public void segSingleThread() 
 	{		
-		for (int i = 0; i < allPaths.size(); i++)
+		//for (int i = 0; i < allPaths.size(); i++)
+		for (int i = 0; i < 1; i++)
 		{
-			Path path = allPaths.get(i);
-			PanelSeg segmentor = segmentors.get(i);
-			segment(segmentor, path);
+			segment(i);
 		}
 				
 		System.out.println("Processing Completed!");
@@ -179,11 +217,12 @@ public class PanelSegEval
 	public static void main(String[] args) throws Exception 
 	{
 		//Check Args
-		if (args.length != 3)
+		if (args.length != 4)
 		{
-			System.out.println("Usage: 	java -jar PanelSegEval.jar <method> <test image folder> <result image folder>");
+			System.out.println("Usage: 	java -jar PanelSegEval.jar <method> <test image folder> <result image folder> <evaluation file>");
 			System.out.println("The program will read image files from <test image folder> and process them.");
-			System.out.println("The results are saved into <result image folder>");
+			System.out.println("The segmentation results are saved into <result image folder>");
+			System.out.println("The evaluation is saved into <evaluation file>");
 			System.out.println();
 			System.out.println("CAUTION: If the <result image folder> exists, the program will delete all files in the <result image folder>");
 			System.out.println();
@@ -194,7 +233,7 @@ public class PanelSegEval
 			return;
 		}
 		
-		Path src_path = Paths.get(args[1]), rst_path = Paths.get(args[2]);
+		Path src_path = Paths.get(args[1]), rst_path = Paths.get(args[2]), evaluation_file = Paths.get(args[3]);
 		if (!Files.exists(src_path))
 		{
 			System.out.println(src_path + " does not exist.");
@@ -215,9 +254,15 @@ public class PanelSegEval
 			return;
 		}
 		
-		PanelSegEval eval = new PanelSegEval(method, src_path, rst_path);
-		//eval.evalSingleThread();
-		eval.evalMultiThreads(10);
+		//Do segmentation
+		PanelSegEval eval = new PanelSegEval(method, src_path, rst_path, evaluation_file);
+		eval.segSingleThread();
+		//eval.segMultiThreads(10);
+		
+		//Do Evaluation
+		eval.LoadPanelSegGt();
+		//eval.loadPanelSegResult();
+		
 	}
 	
 }

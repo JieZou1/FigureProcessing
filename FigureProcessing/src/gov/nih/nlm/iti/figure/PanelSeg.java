@@ -10,9 +10,14 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.bytedeco.javacpp.opencv_core.Mat;
 import org.bytedeco.javacpp.opencv_core.Point;
 import org.bytedeco.javacpp.opencv_core.Scalar;
+import org.w3c.dom.*;
+
 
 enum Orientation { Horizontal, Vertical }
 
@@ -96,5 +101,146 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 
 		return img;		
 	}
+	
+	/**
+	 * Load Ground Truth Annotations of panel segmentation
+	 * @param xml_file
+	 * @return
+	 * @throws Exception
+	 */
+	static ArrayList<PanelSegResult> LoadPanelSegGt(String gt_xml_file) throws Exception
+	{
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder = factory.newDocumentBuilder();
+		Document doc = builder.parse(gt_xml_file);
+		
+		ArrayList<PanelSegResult> panels = new ArrayList<PanelSegResult>();
+		ArrayList<Rectangle> labelRects = new ArrayList<Rectangle>();
+		ArrayList<String> labelNames = new ArrayList<String>();
+		
+		NodeList shapeNodes = doc.getElementsByTagName("Shape");
+		
+		for (int i = 0; i < shapeNodes.getLength(); i++)
+		{
+			Node shapeNode = shapeNodes.item(i);
+			Node blockTextNode = getChildNode(shapeNode, "BlockText");
+			Node textNode = getChildNode(blockTextNode, "Text");
+			String text = textNode.getTextContent().toLowerCase();
+			
+			if (text.startsWith("panel "))
+			{	//It is a panel
+				Node dataNode = getChildNode(shapeNode, "Data");
+				Node extentNode = getChildNode(dataNode, "Extent");
+				NamedNodeMap attributes = extentNode.getAttributes();
+				int x = (int)(Double.parseDouble(attributes.getNamedItem("X").getTextContent()));
+				int y = (int)(Double.parseDouble(attributes.getNamedItem("Y").getTextContent()));
+				int width = (int)(Double.parseDouble(attributes.getNamedItem("Width").getTextContent()));
+				int height = (int)(Double.parseDouble(attributes.getNamedItem("Height").getTextContent()));
+				
+				PanelSegResult panel = new PanelSegResult();
+				panel.panelRect = new Rectangle(x, y, width, height);
+				panel.panelLabel = text.split("\\s+")[1];
+				panels.add(panel);
+			}
+			else
+			{	//It is a label
+				Node dataNode = getChildNode(shapeNode, "Data");
+				Node extentNode = getChildNode(dataNode, "Extent");
+				NamedNodeMap attributes = extentNode.getAttributes();
+				int x = (int)(Double.parseDouble(attributes.getNamedItem("X").getTextContent()));
+				int y = (int)(Double.parseDouble(attributes.getNamedItem("Y").getTextContent()));
+				int width = (int)(Double.parseDouble(attributes.getNamedItem("Width").getTextContent()));
+				int height = (int)(Double.parseDouble(attributes.getNamedItem("Height").getTextContent()));
+			
+				Rectangle labelRect = new Rectangle(x, y, width, height);
+				labelRects.add(labelRect);
+				labelNames.add(text.split("\\s+")[1]);
+			}			
+		}
+		
+		//Match labels to panels
+		for (int i = 0; i < labelRects.size(); i++)
+		{
+			String labelName = labelNames.get(i);
+			for (int j = 0; j < panels.size(); j++)
+			{
+				String panelName = panels.get(j).panelLabel;
+				if (labelName.equals(panelName))
+				{
+					panels.get(i).labelRect = labelRects.get(i);
+					break;
+				}
+			}
+		}
+		
+		return panels;
+	}
+	
+	/**
+	 * Load Panel Segmentation result, for evaluation purposes.
+	 * @param xml_file
+	 * @return
+	 * @throws Exception
+	 */
+	static PanelSegResult[] loadPanelSegResult(String xml_file) throws Exception
+	{
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder = factory.newDocumentBuilder();
+		Document doc = builder.parse(xml_file);
 
+		NodeList panelNodes = doc.getElementsByTagName("gov.nih.nlm.iti.figure.PanelSegResult");
+		PanelSegResult[] panels = new PanelSegResult[panelNodes.getLength()];
+
+		for (int i = 0; i < panelNodes.getLength(); i++)
+		{
+			Node panelNode = panelNodes.item(i);
+			PanelSegResult panel = new PanelSegResult();
+			
+			Node panelRectNode = getChildNode(panelNode, "panelRect");
+			if (panelRectNode != null)
+			{
+				Node xNode = getChildNode(panelRectNode, "x");
+				Node yNode = getChildNode(panelRectNode, "y");
+				Node widthNode = getChildNode(panelRectNode, "width");
+				Node heightNode = getChildNode(panelRectNode, "height");
+				
+				int x = Integer.parseInt(xNode.getTextContent());
+				int y = Integer.parseInt(yNode.getTextContent());
+				int width = Integer.parseInt(widthNode.getTextContent());
+				int height = Integer.parseInt(heightNode.getTextContent());
+				panel.panelRect = new Rectangle(x, y, width, height);
+			}
+			
+			Node panelLabelNode = getChildNode(panelNode, "panelLabel");
+			if (panelLabelNode != null)
+			{
+				panel.panelLabel = panelLabelNode.getTextContent();
+			}
+			
+			Node labelRectNode = getChildNode(panelNode, "labelRect");
+			if (labelRectNode != null)
+			{
+				Node xNode = getChildNode(labelRectNode, "x");
+				Node yNode = getChildNode(labelRectNode, "y");
+				Node widthNode = getChildNode(labelRectNode, "width");
+				Node heightNode = getChildNode(labelRectNode, "height");
+				
+				int x = Integer.parseInt(xNode.getTextContent());
+				int y = Integer.parseInt(yNode.getTextContent());
+				int width = Integer.parseInt(widthNode.getTextContent());
+				int height = Integer.parseInt(heightNode.getTextContent());
+				panel.labelRect = new Rectangle(x, y, width, height);
+			}
+			
+			Node labelScoreNode = getChildNode(panelNode, "labelScore");
+			if (labelScoreNode != null)
+			{
+				panel.labelScore = Double.parseDouble(labelScoreNode.getTextContent());
+			}
+			
+			panels[i] = panel;
+		}
+		return panels;
+	}
+	
 }

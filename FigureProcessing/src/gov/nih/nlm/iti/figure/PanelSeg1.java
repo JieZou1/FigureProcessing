@@ -114,7 +114,7 @@ public class PanelSeg1 extends PanelSeg
 				{
 					PanelSegResult panel = new PanelSegResult();
 					panel.labelRect = new Rectangle(label.left, label.top, label.right-label.left, label.bottom-label.top);
-					panel.panelLabel = label.label;
+					panel.panelLabel = Character.toString(label.label);
 					panel.labelScore = label.score;
 					figure.segmentationResult.add(panel);
 				}				

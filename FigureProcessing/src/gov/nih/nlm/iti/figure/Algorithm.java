@@ -2,10 +2,9 @@ package gov.nih.nlm.iti.figure;
 
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
-import javax.imageio.ImageIO;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import static org.bytedeco.javacpp.opencv_core.*;
 
@@ -20,14 +19,13 @@ import static org.bytedeco.javacpp.opencv_core.*;
 abstract public class Algorithm 
 {
 	protected Figure figure;
-
 	/**
 	 * Very inefficient function to convert BufferImage between types
 	 * @param src
 	 * @param bufImgType
 	 * @return
 	 */
-	static BufferedImage convert(BufferedImage src, int bufImgType) 
+	private static BufferedImage convert(BufferedImage src, int bufImgType) 
 	{
 	    BufferedImage img= new BufferedImage(src.getWidth(), src.getHeight(), bufImgType);
 	    Graphics2D g2d= img.createGraphics();
@@ -83,7 +81,7 @@ abstract public class Algorithm
 	 * @param in
 	 * @return 
 	 */
-	public static BufferedImage mat2BufferdImg(Mat in)
+	static BufferedImage mat2BufferdImg(Mat in)
     {
 		int width = in.cols(), height = in.rows();
         BufferedImage out;
@@ -108,4 +106,25 @@ abstract public class Algorithm
 //		}
         return out;
     } 
+
+	/**
+	 * return a child node of the parent node based on its tag
+	 * @param parent
+	 * @param tag
+	 * @return
+	 */
+	static Node getChildNode(Node parent, String tag)
+	{
+		String nodeName;
+		NodeList children = parent.getChildNodes();
+		for (int j = 0; j < children.getLength(); j++)
+		{
+			Node child = children.item(j);
+			nodeName = child.getNodeName();
+			if (tag != nodeName) continue;
+			
+			return child;
+		}
+		return null;
+	}
 }
