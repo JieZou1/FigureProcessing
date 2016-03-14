@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.concurrent.*;
 
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.javacpp.opencv_core.Mat;
@@ -17,45 +16,11 @@ import org.bytedeco.javacpp.opencv_core.Mat;
 import com.thoughtworks.xstream.XStream;
 
 /**
- * Implementing multi-threading processing in Fork/Join framework
- * 
- * It takes a PanelSegEval, and uses divide-and-conquer strategy to run multi-tasks in commonPool
+ * Panel Segmentation Evaluation
  * 
  * @author Jie Zou
- *
+ * 
  */
-class PanelSegTask extends RecursiveAction
-{
-	private static final long serialVersionUID = 1L;
-
-	int seqThreshold;
-	
-	PanelSegEval segEval;	int start, end;
-	
-	PanelSegTask(PanelSegEval segEval, int start, int end, int seqThreshold) 
-	{
-		this.segEval = segEval;		this.start = start;		this.end = end; this.seqThreshold = seqThreshold;
-	}
-	
-	@Override
-	protected void compute()
-	{
-		if (end - start < seqThreshold)
-		{
-			for (int i = start; i < end; i++)
-			{
-				segEval.segment(i);
-			}
-		}
-		else
-		{
-			int middle = (start + end)/2;
-			invokeAll(	new PanelSegTask(segEval, start, middle, this.seqThreshold), 
-						new PanelSegTask(segEval, middle, end, this.seqThreshold));
-		}
-	}
-}
-
 public class PanelSegEval 
 {
 	private Path srcFolder, rstFolder;
@@ -147,6 +112,7 @@ public class PanelSegEval
 		for (int i = 0; i < allXMLPaths.size(); i++)
 		{
 			ArrayList<PanelSegResult> panels = PanelSeg.LoadPanelSegGt(allXMLPaths.get(i));
+			gtPanels.add(panels);
 		}
 		return gtPanels;
 	}
@@ -194,7 +160,7 @@ public class PanelSegEval
 //		int level = ForkJoinPool.getCommonPoolParallelism();
 //		int cores = Runtime.getRuntime().availableProcessors();
 
-		PanelSegTask task = new PanelSegTask(this, 0, allPaths.size(), seqThreshold);
+		PanelSegEvalTask task = new PanelSegEvalTask(this, 0, allPaths.size(), seqThreshold);
 		task.invoke();
 		System.out.println("Processing Completed!");
 	}
@@ -214,6 +180,11 @@ public class PanelSegEval
 		System.out.println("Processing Completed!");
 	}
 	
+	/**
+	 * Panel Segmentation Evaluation Main Function
+	 * @param args
+	 * @throws Exception
+	 */
 	public static void main(String[] args) throws Exception 
 	{
 		//Check Args

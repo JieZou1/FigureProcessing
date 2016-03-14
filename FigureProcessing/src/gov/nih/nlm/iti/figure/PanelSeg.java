@@ -8,14 +8,17 @@ import static org.bytedeco.javacpp.opencv_imgproc.rectangle;
 
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.bytedeco.javacpp.opencv_core.Mat;
 import org.bytedeco.javacpp.opencv_core.Point;
 import org.bytedeco.javacpp.opencv_core.Scalar;
+import org.bytedeco.javacpp.presets.opencv_core.Str;
 import org.w3c.dom.*;
 
 
@@ -138,8 +141,9 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 				int height = (int)(Double.parseDouble(attributes.getNamedItem("Height").getTextContent()));
 				
 				PanelSegResult panel = new PanelSegResult();
-				panel.panelRect = new Rectangle(x, y, width, height);
-				panel.panelLabel = text.split("\\s+")[1];
+				panel.panelRect = new Rectangle(x, y, width + 1, height + 1); //Looks like that iPhotoDraw uses [] for range instead of [)
+				String[] words = text.split("\\s+"); 
+				panel.panelLabel = String.join(" ", ArrayUtils.remove(words, 0));
 				panels.add(panel);
 			}
 			else
@@ -152,25 +156,61 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 				int width = (int)(Double.parseDouble(attributes.getNamedItem("Width").getTextContent()));
 				int height = (int)(Double.parseDouble(attributes.getNamedItem("Height").getTextContent()));
 			
-				Rectangle labelRect = new Rectangle(x, y, width, height);
+				Rectangle labelRect = new Rectangle(x, y, width + 1, height + 1); //Looks like that iPhotoDraw uses [] for range instead of [)
 				labelRects.add(labelRect);
-				labelNames.add(text.split("\\s+")[1]);
+				String[] words = text.split("\\s+"); 
+				labelNames.add(String.join(" ", ArrayUtils.remove(words, 0)));				
 			}			
 		}
 		
 		//Match labels to panels
 		for (int i = 0; i < labelRects.size(); i++)
 		{
-			String labelName = labelNames.get(i);
+			String labelName = labelNames.get(i);			
+			boolean found = false;
 			for (int j = 0; j < panels.size(); j++)
 			{
 				String panelName = panels.get(j).panelLabel;
 				if (labelName.equals(panelName))
 				{
-					panels.get(i).labelRect = labelRects.get(i);
+					panels.get(j).labelRect = labelRects.get(i);
+					found = true;
 					break;
 				}
 			}
+			
+			if (found) continue;
+			
+			//Not found by matching labels, we check with intersections
+			Rectangle labelRect = labelRects.get(i);
+			for (int j = 0; j < panels.size(); j++)
+			{
+				Rectangle panelRect = panels.get(j).panelRect;
+				if (panelRect.intersects(labelRect))
+				{
+					panels.get(j).labelRect = labelRect;
+					panels.get(j).panelLabel = labelName;
+					found = true;
+					break;
+				}
+			}
+			
+			if (found) continue;
+			
+			//Not found by matching labels, and checking intersections, we check with union
+			int min_area = Integer.MAX_VALUE; int min_j = -1;
+			for (int j = 0; j < panels.size(); j++)
+			{
+				Rectangle panelRect = panels.get(j).panelRect;
+				Rectangle union = panelRect.union(labelRect);
+				int area = union.width * union.height;
+				if (area < min_area)
+				{
+					min_area = area; min_j = j;
+				}
+			}
+			panels.get(min_j).labelRect = labelRect;
+			panels.get(min_j).panelLabel = labelName;
 		}
 		
 		return panels;
