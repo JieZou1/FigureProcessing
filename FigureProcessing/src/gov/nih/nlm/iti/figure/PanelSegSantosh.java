@@ -322,7 +322,7 @@ public final class PanelSegSantosh extends PanelSeg
 		Collections.sort(verPositions);
 		
 		//Find rectangle panels from horPositions and verPositions
-		figure.segmentationResult = new ArrayList<PanelSegResult>();
+		figure.segmentationResult = new ArrayList<PanelSegInfo>();
 		//figure.result.panelRects = new ArrayList<Rectangle>();
 		for (int i = 0; i < horPositions.size() - 1; i++)
 		{
@@ -334,7 +334,7 @@ public final class PanelSegSantosh extends PanelSeg
 				int ver2 = (int)((verPositions.get(j + 1) + yOffset) / RESIZE_FACTOR + 0.5);
 				
 				Rectangle rect = new Rectangle(hor1, ver1, hor2-hor1, ver2 - ver1);
-				PanelSegResult panel = new PanelSegResult();
+				PanelSegInfo panel = new PanelSegInfo();
 				panel.panelRect = rect;
 				//figure.result.panelRects.add(rect);
 				figure.segmentationResult.add(panel);

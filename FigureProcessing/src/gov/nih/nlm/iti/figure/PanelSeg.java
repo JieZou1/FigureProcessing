@@ -8,7 +8,6 @@ import static org.bytedeco.javacpp.opencv_imgproc.rectangle;
 
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -18,7 +17,6 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.bytedeco.javacpp.opencv_core.Mat;
 import org.bytedeco.javacpp.opencv_core.Point;
 import org.bytedeco.javacpp.opencv_core.Scalar;
-import org.bytedeco.javacpp.presets.opencv_core.Str;
 import org.w3c.dom.*;
 
 
@@ -47,7 +45,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	{
 		figure = new Figure(image);	//Construct a figure object for saving processing results
 		figure.imageGray = new Mat();		cvtColor(figure.image, figure.imageGray, CV_BGR2GRAY);
-		figure.segmentationResult = new ArrayList<PanelSegResult>();		
+		figure.segmentationResult = new ArrayList<PanelSegInfo>();		
 	}
 	/**
 	 * The entrance function to perform panel segmentation. <p>
@@ -79,7 +77,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	 * Get the panel segmentation result
 	 * @return The detected panels
 	 */
-	public ArrayList<PanelSegResult> getSegmentationResult()	{	return figure.segmentationResult;	}
+	public ArrayList<PanelSegInfo> getSegmentationResult()	{	return figure.segmentationResult;	}
 
 	/**
 	 * Get the panel segmentation result by drawing the panel boundaries on the image
@@ -88,7 +86,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	public Mat getSegmentationResultInMat()
 	{
 		Mat img = figure.image.clone();
-		for (PanelSegResult panel : figure.segmentationResult)
+		for (PanelSegInfo panel : figure.segmentationResult)
 		{
 			if (panel.panelRect != null )
 			{
@@ -111,13 +109,13 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	 * @return
 	 * @throws Exception
 	 */
-	static ArrayList<PanelSegResult> LoadPanelSegGt(String gt_xml_file) throws Exception
+	static ArrayList<PanelSegInfo> LoadPanelSegGt(String gt_xml_file) throws Exception
 	{
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
 		Document doc = builder.parse(gt_xml_file);
 		
-		ArrayList<PanelSegResult> panels = new ArrayList<PanelSegResult>();
+		ArrayList<PanelSegInfo> panels = new ArrayList<PanelSegInfo>();
 		ArrayList<Rectangle> labelRects = new ArrayList<Rectangle>();
 		ArrayList<String> labelNames = new ArrayList<String>();
 		
@@ -140,7 +138,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 				int width = (int)(Double.parseDouble(attributes.getNamedItem("Width").getTextContent()));
 				int height = (int)(Double.parseDouble(attributes.getNamedItem("Height").getTextContent()));
 				
-				PanelSegResult panel = new PanelSegResult();
+				PanelSegInfo panel = new PanelSegInfo();
 				panel.panelRect = new Rectangle(x, y, width + 1, height + 1); //Looks like that iPhotoDraw uses [] for range instead of [)
 				String[] words = text.split("\\s+"); 
 				panel.panelLabel = String.join(" ", ArrayUtils.remove(words, 0));
@@ -222,19 +220,19 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	 * @return
 	 * @throws Exception
 	 */
-	static PanelSegResult[] loadPanelSegResult(String xml_file) throws Exception
+	static PanelSegInfo[] loadPanelSegResult(String xml_file) throws Exception
 	{
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
 		Document doc = builder.parse(xml_file);
 
 		NodeList panelNodes = doc.getElementsByTagName("gov.nih.nlm.iti.figure.PanelSegResult");
-		PanelSegResult[] panels = new PanelSegResult[panelNodes.getLength()];
+		PanelSegInfo[] panels = new PanelSegInfo[panelNodes.getLength()];
 
 		for (int i = 0; i < panelNodes.getLength(); i++)
 		{
 			Node panelNode = panelNodes.item(i);
-			PanelSegResult panel = new PanelSegResult();
+			PanelSegInfo panel = new PanelSegInfo();
 			
 			Node panelRectNode = getChildNode(panelNode, "panelRect");
 			if (panelRectNode != null)

@@ -13,36 +13,29 @@ import java.util.ArrayList;
 /**
  * For ground truth annotation visualization  
  */
-public class PanelSegTrainGTViz extends PanelSegTrainMethod 
+class PanelSegTrainGTViz extends PanelSegTrainMethod 
 {
 
 	@Override
-	public void Train(Path imageFilePath, Path resultFolder) 
+	public void Train(Path imageFilePath, Path resultFolder) throws Exception 
 	{
 		String image_file_path = imageFilePath.toString();
 		
 		//Load GT annotation
 		String gt_xml_file = image_file_path.replaceAll(".jpg", "_data.xml");
-		
 		if (!Files.exists(Paths.get(gt_xml_file))) return;
-		
-		ArrayList<PanelSegResult> gt_segmentation = null;
-		try {
-			gt_segmentation = PanelSeg.LoadPanelSegGt(gt_xml_file);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		gt_segmentation = PanelSeg.LoadPanelSegGt(gt_xml_file);
 		
 		//Load original Image
-		Mat image = imread(image_file_path, CV_LOAD_IMAGE_COLOR);
+		image = imread(image_file_path, CV_LOAD_IMAGE_COLOR);
 		
 		//Superimpose gt annotation to orginal image
+		@SuppressWarnings("resource")
 		Scalar red = new Scalar(0, 0, 255, 0), blue = new Scalar(255, 0, 0, 0);
 		for (int i = 0; i < gt_segmentation.size(); i++)
 		{
-			Scalar color = i%2 == 0? red:blue;
-			PanelSegResult panel = gt_segmentation.get(i);
+			Scalar color = (i % 2 == 0)? red : blue;
+			PanelSegInfo panel = gt_segmentation.get(i);
 			if (panel.panelRect != null)
 			{
 				Rect panel_rect = new Rect(panel.panelRect.x, panel.panelRect.y, panel.panelRect.width, panel.panelRect.height);	

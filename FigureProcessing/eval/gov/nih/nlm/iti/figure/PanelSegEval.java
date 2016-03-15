@@ -90,7 +90,7 @@ public class PanelSegEval
 		}
 	}
 	
-	ArrayList<ArrayList<PanelSegResult>> LoadPanelSegGt() throws Exception
+	ArrayList<ArrayList<PanelSegInfo>> LoadPanelSegGt() throws Exception
 	{
 		ArrayList<String> allXMLPaths = new ArrayList<String>();
 		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(this.srcFolder)) 
@@ -108,10 +108,10 @@ public class PanelSegEval
 			e.printStackTrace();
 		}
 		
-		ArrayList<ArrayList<PanelSegResult>> gtPanels = new ArrayList<ArrayList<PanelSegResult>>();		
+		ArrayList<ArrayList<PanelSegInfo>> gtPanels = new ArrayList<ArrayList<PanelSegInfo>>();		
 		for (int i = 0; i < allXMLPaths.size(); i++)
 		{
-			ArrayList<PanelSegResult> panels = PanelSeg.LoadPanelSegGt(allXMLPaths.get(i));
+			ArrayList<PanelSegInfo> panels = PanelSeg.LoadPanelSegGt(allXMLPaths.get(i));
 			gtPanels.add(panels);
 		}
 		return gtPanels;
@@ -136,7 +136,7 @@ public class PanelSegEval
 		imwrite(img_file, img_result);
 		
 		// 2.2 Save result in xml files
-		ArrayList<PanelSegResult> xml_result = segmentor.getSegmentationResult();
+		ArrayList<PanelSegInfo> xml_result = segmentor.getSegmentationResult();
 		String xml = xStream.toXML(xml_result);
 		String xml_file = rstFolder.resolve(path.getFileName()).toString().replace(".jpg", ".xml");
 		try (FileWriter fw = new FileWriter(xml_file))

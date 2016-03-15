@@ -12,7 +12,7 @@ import java.awt.Rectangle;
  * @author Jie Zou
  *
  */
-public class PanelSegResult 
+public class PanelSegInfo 
 {
 	Rectangle panelRect;
 	

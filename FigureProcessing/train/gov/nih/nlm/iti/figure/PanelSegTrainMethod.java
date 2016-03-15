@@ -1,6 +1,9 @@
 package gov.nih.nlm.iti.figure;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+
+import org.bytedeco.javacpp.opencv_core.Mat;
 
 /**
  * The base class for all panel segmentation Training routines. <p>
@@ -12,5 +15,8 @@ import java.nio.file.Path;
  */
 public abstract class PanelSegTrainMethod 
 {
-	public abstract void Train(Path imageFilePath, Path resultFolder);
+	protected Mat image;
+	protected ArrayList<PanelSegInfo> gt_segmentation;
+	
+	public abstract void Train(Path imageFilePath, Path resultFolder) throws Exception;
 }

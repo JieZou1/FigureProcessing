@@ -26,7 +26,7 @@ public final class PanelSegJaylene extends PanelSeg
 	private void segment()
 	{
 		figure = new Figure(matImage);	//Construct a figure object for saving processing results
-		figure.segmentationResult = new ArrayList<PanelSegResult>();
+		figure.segmentationResult = new ArrayList<PanelSegInfo>();
 
 		PanelSplitter extractPanel = new PanelSplitter(bufferedImage);	//Construct Jaylene's panel object for calling her segmentation method
 		extractPanel.removeLabel();
@@ -34,7 +34,7 @@ public final class PanelSegJaylene extends PanelSeg
 
 		for (Rectangle rect : rects)
 		{
-			PanelSegResult panel = new PanelSegResult();
+			PanelSegInfo panel = new PanelSegInfo();
 			panel.panelRect = rect;
 			figure.segmentationResult.add(panel);
 		}

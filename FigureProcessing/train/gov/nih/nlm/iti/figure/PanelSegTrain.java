@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import org.apache.commons.io.FileUtils;
 
 /**
- * Some training routines for Panel Segmentation. 
+ * Training routines for Panel Segmentation. 
  * 
  * @author Jie Zou
  *
  */
-public class PanelSegTrain 
+class PanelSegTrain 
 {
 	private Path srcFolder, rstFolder;
 	ArrayList<Path> allPaths;
@@ -43,6 +43,7 @@ public class PanelSegTrain
 				switch (method) 
 				{
 				case "GTViz": methods.add(new PanelSegTrainGTViz());			break;
+				case "LabelPatch": methods.add(new PanelSegTrainLabelPatch());			break;
 				}
 			}
 		}
@@ -53,12 +54,12 @@ public class PanelSegTrain
 		}
 	}
 	
-	void train(int i)
+	void train(int i) throws Exception
 	{
 		Path path = allPaths.get(i);		PanelSegTrainMethod method = methods.get(i);
 		
 		String filename = path.toString();
-		//if (!filename.endsWith("1472-6890-6-1-1.jpg")) return;
+		//if (!filename.endsWith("1748-7161-4-9-2.jpg")) return;
 		System.out.println("Processing "+ filename);
 		method.Train(path, rstFolder);
 	}
@@ -81,8 +82,9 @@ public class PanelSegTrain
 	/**
 	 * Do segmentation in a single thread.  Not very useful.
 	 * Use large seqThreshold value, in segMultiThreads, can accomplish segSingleThread
+	 * @throws Exception 
 	 */
-	public void trainSingleThread() 
+	public void trainSingleThread() throws Exception 
 	{		
 		for (int i = 0; i < allPaths.size(); i++)
 		//for (int i = 0; i < 1; i++)
@@ -105,7 +107,8 @@ public class PanelSegTrain
 			System.out.println("CAUTION: If the <result folder> exists, the program will delete all files in the <result image folder>");
 			System.out.println();
 			System.out.println("method:");
-			System.out.println("	GTViz	Generate Ground Truth Visualization, i.e., superimpose annotations on the original figure images");
+			System.out.println("	GTViz		Generate Ground Truth Visualization, i.e., superimpose annotations on the original figure images");
+			System.out.println("	LabelPatch	Crop the label patches and normalized them for training");
 			return;
 		}
 		
@@ -123,6 +126,7 @@ public class PanelSegTrain
 		switch (method) 
 		{
 		case "GTViz": break;
+		case "LabelPatch": break;
 		default:
 			System.out.println(method + " is not known.");
 			return;
@@ -130,12 +134,9 @@ public class PanelSegTrain
 		
 		//Do Training
 		PanelSegTrain train = new PanelSegTrain(method, src_path, rst_path);
-		train.trainSingleThread();
-		//train.trainMultiThreads(10);
+		//train.trainSingleThread();
+		train.trainMultiThreads(10);
 		
-		//Do Evaluation
-		//eval.LoadPanelSegGt();
-		//eval.loadPanelSegResult();
 	}	
 
 }

@@ -53,7 +53,7 @@ public class PanelSeg1 extends PanelSeg
 	public void segment(Mat image)
 	{
 		figure = new Figure(image);	//Construct a figure object for saving processing results
-		figure.segmentationResult = new ArrayList<PanelSegResult>();
+		figure.segmentationResult = new ArrayList<PanelSegInfo>();
 
 		
 		//panel = new Figure(image, new Rect(0, 0, image.cols(), image.rows()));
@@ -85,7 +85,7 @@ public class PanelSeg1 extends PanelSeg
 		//int setNo = panelLabelDetectionRef.setNo;	
 		
 		// remove duplicate rectangles across the candidate label sets
-		figure.segmentationResult = new ArrayList<PanelSegResult>();
+		figure.segmentationResult = new ArrayList<PanelSegInfo>();
 		for (int i = 0; i < candLabelSet.size(); i++)
 		{
 			System.out.println("candidate label set: " + i);
@@ -112,7 +112,7 @@ public class PanelSeg1 extends PanelSeg
 				}
 				if (!isDuplicate)
 				{
-					PanelSegResult panel = new PanelSegResult();
+					PanelSegInfo panel = new PanelSegInfo();
 					panel.labelRect = new Rectangle(label.left, label.top, label.right-label.left, label.bottom-label.top);
 					panel.panelLabel = Character.toString(label.label);
 					panel.labelScore = label.score;
@@ -139,7 +139,7 @@ public class PanelSeg1 extends PanelSeg
 		
 		if (figure.segmentationResult == null || figure.segmentationResult.size() == 0) return img;
 		
-		for (PanelSegResult panel : figure.segmentationResult)
+		for (PanelSegInfo panel : figure.segmentationResult)
 		{
 			Rect rect = new Rect(panel.labelRect.x, panel.labelRect.y, panel.labelRect.width, panel.labelRect.height);
 			rectangle(img, rect, Scalar.RED, 1, 8, 0);

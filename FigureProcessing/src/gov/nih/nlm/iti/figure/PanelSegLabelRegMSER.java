@@ -23,7 +23,7 @@ class PanelSegLabelRegMSER extends PanelSeg
 			if (rect.width() > Figure.label_box_max_width) continue;
 			if (rect.height() > Figure.label_box_max_height) continue;
 			
-			PanelSegResult panel = new PanelSegResult();
+			PanelSegInfo panel = new PanelSegInfo();
 			panel.labelRect = new Rectangle(rect.x(), rect.y(), rect.width(), rect.height());
 			figure.segmentationResult.add(panel);
 		}		

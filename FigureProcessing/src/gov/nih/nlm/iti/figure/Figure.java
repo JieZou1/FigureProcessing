@@ -17,7 +17,7 @@ class Figure
 	Mat imageGray;	//The gray image converted from original BGR image
 	int imageWidth, imageHeight;
 	
-	ArrayList<PanelSegResult> segmentationResult;
+	ArrayList<PanelSegInfo> segmentationResult;
 	
 	//Below info is collected from LabelStatistics.txt
 	static final int label_box_max_width = 70;

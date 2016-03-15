@@ -12,9 +12,6 @@ import java.util.concurrent.RecursiveAction;
  */
 public class PanelSegTrainTask extends RecursiveAction
 {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	int seqThreshold;
@@ -33,7 +30,12 @@ public class PanelSegTrainTask extends RecursiveAction
 		{
 			for (int i = start; i < end; i++)
 			{
-				seqTrain.train(i);
+				try {
+					seqTrain.train(i);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 		else
