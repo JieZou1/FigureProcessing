@@ -3,10 +3,13 @@ package gov.nih.nlm.iti.figure;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
+import org.bytedeco.javacpp.opencv_core.Mat;
+import org.bytedeco.javacpp.opencv_core.Rect;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import static org.bytedeco.javacpp.opencv_core.*;
+import static org.bytedeco.javacpp.opencv_imgproc.boundingRect;
 
 /**
  * The base class for all algorithms, which can apply to a Figure. <p>
@@ -126,5 +129,12 @@ abstract public class Algorithm
 			return child;
 		}
 		return null;
+	}
+
+	static Rect findBoundingbox(Mat bina)
+	{
+		Mat points = new Mat();	findNonZero(bina,points);
+		Rect minRect=boundingRect(points);	
+		return minRect;
 	}
 }

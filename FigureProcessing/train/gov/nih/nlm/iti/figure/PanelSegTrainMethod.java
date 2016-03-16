@@ -15,8 +15,8 @@ import org.bytedeco.javacpp.opencv_core.Mat;
  */
 public abstract class PanelSegTrainMethod 
 {
-	protected Mat image;
-	protected ArrayList<PanelSegInfo> gt_segmentation;
+	protected Mat image, imageGray, imageGrayInverted;
+	protected ArrayList<PanelSegInfo> gtSegmentation;
 	
 	public abstract void Train(Path imageFilePath, Path resultFolder) throws Exception;
 }

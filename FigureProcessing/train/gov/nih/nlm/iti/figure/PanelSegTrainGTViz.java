@@ -7,7 +7,6 @@ import org.bytedeco.javacpp.opencv_core.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 
 /**
@@ -24,7 +23,7 @@ class PanelSegTrainGTViz extends PanelSegTrainMethod
 		//Load GT annotation
 		String gt_xml_file = image_file_path.replaceAll(".jpg", "_data.xml");
 		if (!Files.exists(Paths.get(gt_xml_file))) return;
-		gt_segmentation = PanelSeg.LoadPanelSegGt(gt_xml_file);
+		gtSegmentation = PanelSeg.LoadPanelSegGt(gt_xml_file);
 		
 		//Load original Image
 		image = imread(image_file_path, CV_LOAD_IMAGE_COLOR);
@@ -32,10 +31,10 @@ class PanelSegTrainGTViz extends PanelSegTrainMethod
 		//Superimpose gt annotation to orginal image
 		@SuppressWarnings("resource")
 		Scalar red = new Scalar(0, 0, 255, 0), blue = new Scalar(255, 0, 0, 0);
-		for (int i = 0; i < gt_segmentation.size(); i++)
+		for (int i = 0; i < gtSegmentation.size(); i++)
 		{
 			Scalar color = (i % 2 == 0)? red : blue;
-			PanelSegInfo panel = gt_segmentation.get(i);
+			PanelSegInfo panel = gtSegmentation.get(i);
 			if (panel.panelRect != null)
 			{
 				Rect panel_rect = new Rect(panel.panelRect.x, panel.panelRect.y, panel.panelRect.width, panel.panelRect.height);	

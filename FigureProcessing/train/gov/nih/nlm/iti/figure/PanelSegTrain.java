@@ -59,7 +59,7 @@ class PanelSegTrain
 		Path path = allPaths.get(i);		PanelSegTrainMethod method = methods.get(i);
 		
 		String filename = path.toString();
-		//if (!filename.endsWith("1748-7161-4-9-2.jpg")) return;
+		//if (!filename.endsWith("1471-2105-10-368-7.jpg")) return;
 		System.out.println("Processing "+ filename);
 		method.Train(path, rstFolder);
 	}
@@ -134,8 +134,8 @@ class PanelSegTrain
 		
 		//Do Training
 		PanelSegTrain train = new PanelSegTrain(method, src_path, rst_path);
-		//train.trainSingleThread();
-		train.trainMultiThreads(10);
+		train.trainSingleThread();
+		//train.trainMultiThreads(10);
 		
 	}	
 
