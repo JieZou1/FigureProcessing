@@ -44,6 +44,7 @@ class PanelSegTrain
 				{
 				case "GTViz": methods.add(new PanelSegTrainGTViz());			break;
 				case "LabelPatch": methods.add(new PanelSegTrainLabelPatch());			break;
+				case "LabelPatchNeg": methods.add(new PanelSegTrainLabelPatchNeg());			break;
 				}
 			}
 		}
@@ -109,6 +110,7 @@ class PanelSegTrain
 			System.out.println("method:");
 			System.out.println("	GTViz		Generate Ground Truth Visualization, i.e., superimpose annotations on the original figure images");
 			System.out.println("	LabelPatch	Crop the label patches and normalized them for training");
+			System.out.println("	LabelPatchNeg	Randomly generate some negative patches for label recognition");
 			return;
 		}
 		
@@ -127,6 +129,7 @@ class PanelSegTrain
 		{
 		case "GTViz": break;
 		case "LabelPatch": break;
+		case "LabelPatchNeg": break;
 		default:
 			System.out.println(method + " is not known.");
 			return;
@@ -134,8 +137,8 @@ class PanelSegTrain
 		
 		//Do Training
 		PanelSegTrain train = new PanelSegTrain(method, src_path, rst_path);
-		train.trainSingleThread();
-		//train.trainMultiThreads(10);
+		//train.trainSingleThread();
+		train.trainMultiThreads(10);
 		
 	}	
 

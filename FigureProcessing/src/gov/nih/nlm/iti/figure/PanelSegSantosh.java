@@ -26,7 +26,6 @@ public final class PanelSegSantosh extends PanelSeg
 	/**
 	 * The main entrance function to perform segmentation.
 	 * Call getResult* functions to retrieve result in different format.
-	 * @throws Exception 
 	 */
 	public void segment(Mat image)  
 	{		
