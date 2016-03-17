@@ -17,21 +17,68 @@ import org.apache.commons.io.FileUtils;
  */
 class PanelSegTrain 
 {
+	private String method;
 	private Path srcFolder, rstFolder;
 	ArrayList<Path> allPaths;
 	ArrayList<PanelSegTrainMethod> methods;
+	ArrayList<Boolean> flags;
 	
 	/**
-	 * Prepare the Panel Segmentation evaluation. 
+	 * Prepare the Panel Segmentation training. 
 	 * @param method	The PanelSeg method
 	 * @param srcFolder	The source folder
 	 * @param rstFolder	The result folder
 	 */
 	PanelSegTrain(String method, Path srcFolder, Path rstFolder) 
 	{
-		this.srcFolder = srcFolder;		this.rstFolder = rstFolder;
+		this.method = method; 	this.srcFolder = srcFolder;		this.rstFolder = rstFolder;
 
 		allPaths = new ArrayList<Path>();		methods = new ArrayList<PanelSegTrainMethod>();
+
+		if (method.equals("LabelPatchHoG"))
+		{
+			flags = new ArrayList<Boolean>();
+			
+			//Positive samples
+			try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(this.srcFolder)) 
+			{			
+				for (Path path : dirStrm)
+				{
+					String filename = path.toString();
+					if (!filename.endsWith(".bmp")) continue;
+					allPaths.add(path);
+					methods.add(new PanelSegTrainLabelPatchHoG());
+					flags.add(true);
+				}
+			}
+			catch (IOException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			//Negative samples
+			Path negPath = srcFolder.resolve("neg");
+			try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(negPath)) 
+			{			
+				for (Path path : dirStrm)
+				{
+					String filename = path.toString();
+					if (!filename.endsWith(".bmp")) continue;
+					allPaths.add(path);
+					methods.add(new PanelSegTrainLabelPatchHoG());
+					flags.add(false);
+				}
+			}
+			catch (IOException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return;
+		}
+		
 		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(this.srcFolder)) 
 		{			
 			for (Path path : dirStrm)
@@ -42,9 +89,9 @@ class PanelSegTrain
 				allPaths.add(path);
 				switch (method) 
 				{
-				case "GTViz": methods.add(new PanelSegTrainGTViz());			break;
-				case "LabelPatch": methods.add(new PanelSegTrainLabelPatch());			break;
-				case "LabelPatchNeg": methods.add(new PanelSegTrainLabelPatchNeg());			break;
+				case "GTViz": methods.add(new PanelSegTrainGTViz());				break;
+				case "LabelPatch": methods.add(new PanelSegTrainLabelPatch());		break;
+				case "LabelPatchNeg": methods.add(new PanelSegTrainLabelPatchNeg());break;
 				}
 			}
 		}
@@ -53,6 +100,7 @@ class PanelSegTrain
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
 	}
 	
 	void train(int i) throws Exception
@@ -70,13 +118,16 @@ class PanelSegTrain
 	 * The smaller the seqThreshold, the more tasks are parallel processed.
 	 * @param seqThreshold
 	 */
-	public void trainMultiThreads(int seqThreshold)
+	void trainMultiThreads(int seqThreshold)
 	{
 //		int level = ForkJoinPool.getCommonPoolParallelism();
 //		int cores = Runtime.getRuntime().availableProcessors();
 
 		PanelSegTrainTask task = new PanelSegTrainTask(this, 0, allPaths.size(), seqThreshold);
 		task.invoke();
+		
+		if (method == "LabelPatchHoG") generateLabelPatchHoGTrain();
+		
 		System.out.println("Processing Completed!");
 	}
 	
@@ -85,25 +136,34 @@ class PanelSegTrain
 	 * Use large seqThreshold value, in segMultiThreads, can accomplish segSingleThread
 	 * @throws Exception 
 	 */
-	public void trainSingleThread() throws Exception 
+	void trainSingleThread() throws Exception 
 	{		
 		for (int i = 0; i < allPaths.size(); i++)
 		//for (int i = 0; i < 1; i++)
 		{
 			train(i);
 		}
-				
+		
+		if (method == "LabelPatchHoG") generateLabelPatchHoGTrain();
+		
 		System.out.println("Processing Completed!");
 	}
 
+	void generateLabelPatchHoGTrain()
+	{
+		for (int i = 0; i < flags.size(); i++)
+		{
+			PanelSegTrainLabelPatchHoG method = (PanelSegTrainLabelPatchHoG)methods.get(i);
+		}
+	}
 	
 	public static void main(String[] args) throws Exception 
 	{
 		//Check Args
 		if (args.length != 3)
 		{
-			System.out.println("Usage: 	java -jar PanelSegTrain.jar <method> <Ground Truth folder> <result folder>");
-			System.out.println("The program will read image and annotations from <ground-truth  folder> and generate some results to <result folder>.");
+			System.out.println("Usage: 	java -jar PanelSegTrain.jar <method> <source folder> <result folder>");
+			System.out.println("The program will read image and annotations from <source  folder> and generate some results to <result folder>.");
 			System.out.println();
 			System.out.println("CAUTION: If the <result folder> exists, the program will delete all files in the <result image folder>");
 			System.out.println();
@@ -111,6 +171,7 @@ class PanelSegTrain
 			System.out.println("	GTViz		Generate Ground Truth Visualization, i.e., superimpose annotations on the original figure images");
 			System.out.println("	LabelPatch	Crop the label patches and normalized them for training");
 			System.out.println("	LabelPatchNeg	Randomly generate some negative patches for label recognition");
+			System.out.println("	LabelPatchHoG	Compute HoG features for label detection");
 			return;
 		}
 		
@@ -130,6 +191,7 @@ class PanelSegTrain
 		case "GTViz": break;
 		case "LabelPatch": break;
 		case "LabelPatchNeg": break;
+		case "LabelPatchHoG": break;
 		default:
 			System.out.println(method + " is not known.");
 			return;
@@ -137,8 +199,8 @@ class PanelSegTrain
 		
 		//Do Training
 		PanelSegTrain train = new PanelSegTrain(method, src_path, rst_path);
-		//train.trainSingleThread();
-		train.trainMultiThreads(10);
+		train.trainSingleThread();
+		//train.trainMultiThreads(10);
 		
 	}	
 

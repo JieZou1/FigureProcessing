@@ -9,7 +9,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.bytedeco.javacpp.opencv_core.*;
 
-class PanelSegTrainLabelPatchNeg extends PanelSegTrainMethod 
+final class PanelSegTrainLabelPatchNeg extends PanelSegTrainMethod 
 {
 
 	@Override

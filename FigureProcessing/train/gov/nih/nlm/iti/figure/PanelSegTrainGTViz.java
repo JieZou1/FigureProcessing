@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 /**
  * For ground truth annotation visualization  
  */
-class PanelSegTrainGTViz extends PanelSegTrainMethod 
+final class PanelSegTrainGTViz extends PanelSegTrainMethod 
 {
 
 	@Override

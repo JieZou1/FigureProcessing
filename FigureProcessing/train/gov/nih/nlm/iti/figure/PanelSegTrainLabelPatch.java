@@ -9,7 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-class PanelSegTrainLabelPatch extends PanelSegTrainMethod 
+final class PanelSegTrainLabelPatch extends PanelSegTrainMethod 
 {
 	@Override
 	public void Train(Path imageFilePath, Path resultFolder) throws Exception 
