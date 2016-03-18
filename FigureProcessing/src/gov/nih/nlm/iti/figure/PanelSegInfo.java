@@ -19,4 +19,6 @@ public class PanelSegInfo
 	String panelLabel;
 	Rectangle labelRect;
 	double labelScore;
+	
+	boolean labelInverted; //label is inverted if the character is black. Otherwise it is not inverted.
 }
