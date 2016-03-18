@@ -9,6 +9,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+/**
+ * A PanelSegTrainMethod class for cropping label patches from training ground-truth data  
+ * @author Jie Zou
+ *
+ */
 final class PanelSegTrainLabelPatch extends PanelSegTrainMethod 
 {
 	@Override

@@ -10,7 +10,8 @@ import java.nio.file.Paths;
 
 
 /**
- * For ground truth annotation visualization  
+ * A PanelSegTrainMethod class for ground truth annotation visualization  
+ * @author Jie Zou
  */
 final class PanelSegTrainGTViz extends PanelSegTrainMethod 
 {

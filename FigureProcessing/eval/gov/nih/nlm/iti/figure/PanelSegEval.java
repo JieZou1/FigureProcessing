@@ -52,6 +52,7 @@ public class PanelSegEval
 				case "Jaylene": segmentors.add(new PanelSegJaylene());			break;
 				case "Santosh": segmentors.add(new PanelSegSantosh());			break;
 				case "LabelRegMSER": segmentors.add(new PanelSegLabelRegMSER());break;
+				case "LabelRegHoG": segmentors.add(new PanelSegLabelRegHoG());break;
 				}
 			}
 		}
@@ -171,8 +172,8 @@ public class PanelSegEval
 	 */
 	public void segSingleThread() 
 	{		
-		//for (int i = 0; i < allPaths.size(); i++)
-		for (int i = 0; i < 1; i++)
+		for (int i = 0; i < allPaths.size(); i++)
+		//for (int i = 0; i < 1; i++)
 		{
 			segment(i);
 		}
@@ -201,6 +202,7 @@ public class PanelSegEval
 			System.out.println("	Jaylene		Jaylene's method based on cross uniform band");
 			System.out.println("	Santosh		Santosh's method based on long line segments");
 			System.out.println("	LabelRegMSER	MSER method for recognizing Label candidate regions");
+			System.out.println("	LabelRegHoG		HoG method for recognizing Label candidate regions");
 			return;
 		}
 		
@@ -220,6 +222,7 @@ public class PanelSegEval
 		case "Jaylene": break;
 		case "Santosh": break;
 		case "LabelRegMSER": break;
+		case "LabelRegHoG": break;
 		default:
 			System.out.println(method + " is not known.");
 			return;
@@ -231,7 +234,7 @@ public class PanelSegEval
 		//eval.segMultiThreads(10);
 		
 		//Do Evaluation
-		eval.LoadPanelSegGt();
+		//eval.LoadPanelSegGt();
 		//eval.loadPanelSegResult();
 		
 	}

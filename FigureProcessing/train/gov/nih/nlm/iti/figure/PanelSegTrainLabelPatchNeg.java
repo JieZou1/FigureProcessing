@@ -9,6 +9,11 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.bytedeco.javacpp.opencv_core.*;
 
+/**
+ * A PanelSegTrainMethod class for generating some initial negative patched for label detection/recognition.
+ * @author Jie Zou
+ *
+ */
 final class PanelSegTrainLabelPatchNeg extends PanelSegTrainMethod 
 {
 

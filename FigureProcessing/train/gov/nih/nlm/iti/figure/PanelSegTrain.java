@@ -75,7 +75,17 @@ class PanelSegTrain
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+			return;
+		}
+		
+		if (method.equals("Svm2SingleVec"))
+		{
+			for (int i = 0 ; i < PanelSeg.labelArray.length; i++)
+			{
+				Path path = srcFolder.resolve("svm_model_" + PanelSeg.labelArray[i]);
+				allPaths.add(path);
+				methods.add(new PanelSegTrainSvm2SingleVec());
+			}
 			return;
 		}
 		
@@ -100,7 +110,6 @@ class PanelSegTrain
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
 	
 	void train(int i) throws Exception
@@ -126,7 +135,10 @@ class PanelSegTrain
 		PanelSegTrainTask task = new PanelSegTrainTask(this, 0, allPaths.size(), seqThreshold);
 		task.invoke();
 		
-		if (method == "LabelPatchHoG") generateLabelPatchHoGTrain();
+		if (method.equals("LabelPatchHoG")) 
+			PanelSegTrainLabelPatchHoG.generateLabelPatchHoGTrain(flags, methods, rstFolder.resolve("train.txt").toString());
+		else if (method.equals("Svm2SingleVec"))
+			PanelSegTrainSvm2SingleVec.generateSingleVec(methods, rstFolder.resolve("PanelSegLabelRegHoGModels.java").toString());
 		
 		System.out.println("Processing Completed!");
 	}
@@ -144,19 +156,14 @@ class PanelSegTrain
 			train(i);
 		}
 		
-		if (method == "LabelPatchHoG") generateLabelPatchHoGTrain();
+		if (method.equals("LabelPatchHoG")) 
+			PanelSegTrainLabelPatchHoG.generateLabelPatchHoGTrain(flags, methods, rstFolder.resolve("train.txt").toString());
+		else if (method.equals("Svm2SingleVec"))
+			PanelSegTrainSvm2SingleVec.generateSingleVec(methods, "PanelSegLabelRegHoGModels.java");
 		
 		System.out.println("Processing Completed!");
 	}
 
-	void generateLabelPatchHoGTrain()
-	{
-		for (int i = 0; i < flags.size(); i++)
-		{
-			PanelSegTrainLabelPatchHoG method = (PanelSegTrainLabelPatchHoG)methods.get(i);
-		}
-	}
-	
 	public static void main(String[] args) throws Exception 
 	{
 		//Check Args
@@ -172,6 +179,7 @@ class PanelSegTrain
 			System.out.println("	LabelPatch	Crop the label patches and normalized them for training");
 			System.out.println("	LabelPatchNeg	Randomly generate some negative patches for label recognition");
 			System.out.println("	LabelPatchHoG	Compute HoG features for label detection");
+			System.out.println("	Svm2SingleVec	Convert Linear SVM model to Single Vector");
 			return;
 		}
 		
@@ -192,6 +200,7 @@ class PanelSegTrain
 		case "LabelPatch": break;
 		case "LabelPatchNeg": break;
 		case "LabelPatchHoG": break;
+		case "Svm2SingleVec": break;
 		default:
 			System.out.println(method + " is not known.");
 			return;

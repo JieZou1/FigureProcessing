@@ -32,6 +32,8 @@ enum Orientation { Horizontal, Vertical }
  */
 public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm 
 {
+	static char[] labelArray = {'c'};
+	
 	/**
 	 * Some common initialization functions for all extended panel segmentation algorithms, including: <p>
 	 * 1. Construct Figure object, figure <p>
