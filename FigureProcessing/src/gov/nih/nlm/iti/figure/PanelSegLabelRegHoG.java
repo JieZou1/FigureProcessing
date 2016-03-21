@@ -4,7 +4,9 @@ import static org.bytedeco.javacpp.opencv_core.subtract;
 import static org.bytedeco.javacpp.opencv_imgproc.resize;
 
 import java.awt.Rectangle;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.javacpp.FloatPointer;
@@ -59,7 +61,7 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 		Mat imgeScaledInverted = subtract(Scalar.all(255), imgScaled).asMat();
 		
 		int n = PanelSeg.labelArray.length;
-		ArrayList<PanelSegInfo> results = new ArrayList<PanelSegInfo>();
+		ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
 		for (int i = 0; i < n; i++)
 		{
 			char panelLabel = labelArray[i];
@@ -72,18 +74,23 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 			//Search on original and inverted images (after scaling of course)
 			ArrayList<PanelSegInfo> candidates1 = DetectMultiScale(imgScaled, maxSize, minSize, panelLabel, false);
 			ArrayList<PanelSegInfo> candidates2 = DetectMultiScale(imgeScaledInverted, maxSize, minSize, panelLabel, true);
+			
+			candidates.addAll(candidates1);
+			candidates.addAll(candidates2);
 		}
 		
-		//Scale back to the original size
-		figure.segmentationResult = new ArrayList<PanelSegInfo>();
-		for (int i = 0; i < results.size(); i++)
-		{
-			PanelSegInfo segInfo = results.get(i);
-			Rectangle rect = segInfo.labelRect;
-            Rectangle orig_rect = new Rectangle((int)(rect.x / scale + .5), (int)(rect.y / scale + .5), (int)(rect.width / scale + .5), (int)(rect.height / scale + .5));
-            segInfo.labelRect = orig_rect;
-            figure.segmentationResult.add(segInfo);
-		}
+		//Scale back to the original size and sort them
+		candidates.sort(new ScoreComp());
+		
+//		figure.segmentationResult = new ArrayList<PanelSegInfo>();
+//		for (int i = 0; i < results.size(); i++)
+//		{
+//			PanelSegInfo segInfo = results.get(i);
+//			Rectangle rect = segInfo.labelRect;
+//            Rectangle orig_rect = new Rectangle((int)(rect.x / scale + .5), (int)(rect.y / scale + .5), (int)(rect.width / scale + .5), (int)(rect.height / scale + .5));
+//            segInfo.labelRect = orig_rect;
+//            figure.segmentationResult.add(segInfo);
+//		}
 	}
 	
 	private ArrayList<PanelSegInfo> DetectMultiScale(Mat img, double maxSize, double minSize, char panelLabel, Boolean inverted)
@@ -98,6 +105,11 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 			Rect labelRect = rectVector.get(k);
 			if (labelRect.width() > maxSize || labelRect.height() > maxSize) continue;
 			if (labelRect.width() < minSize || labelRect.height() < minSize) continue;
+			
+			int centerX = labelRect.x() + labelRect.width() / 2;
+			int centerY = labelRect.y() + labelRect.height() / 2;
+			if (centerX <= 0 || centerX >= img.cols()) continue;
+			if (centerY <= 0 || centerY >= img.rows()) continue; //We ignore cases, where the detected patch is halfly outside the image.
 			
 			PanelSegInfo segInfo = new PanelSegInfo();
 			segInfo.labelRect = new Rectangle(labelRect.x(), labelRect.y(), labelRect.width(), labelRect.height());
