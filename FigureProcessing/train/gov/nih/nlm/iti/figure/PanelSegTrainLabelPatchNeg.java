@@ -4,6 +4,9 @@ import static org.bytedeco.javacpp.opencv_core.subtract;
 import static org.bytedeco.javacpp.opencv_imgcodecs.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -16,6 +19,37 @@ import org.bytedeco.javacpp.opencv_core.*;
  */
 final class PanelSegTrainLabelPatchNeg extends PanelSegTrainMethod 
 {
+	/**
+	 * Prepare the Panel Segmentation training. 
+	 * @param method	The PanelSeg method
+	 * @param srcFolder	The source folder
+	 * @param rstFolder	The result folder
+	 *
+	 * @return a PanelSegTrain instance with all the parameters are set 
+	 */
+	static PanelSegTrain createPanelSegTrain(String method, Path srcFolder, Path rstFolder)
+	{
+		PanelSegTrain segTrain = new PanelSegTrain(method, srcFolder, rstFolder);
+
+		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(srcFolder)) 
+		{			
+			for (Path path : dirStrm)
+			{
+				String filename = path.toString();
+				if (!filename.endsWith(".jpg")) continue;
+				
+				segTrain.allPaths.add(path);
+				segTrain.methods.add(new PanelSegTrainLabelPatchNeg());
+			}
+		}
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return segTrain;
+	}
 
 	@Override
 	public void Train(Path imageFilePath, Path resultFolder) throws Exception 

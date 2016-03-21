@@ -12,8 +12,30 @@ import java.util.ArrayList;
  */
 final class PanelSegTrainSvm2SingleVec extends PanelSegTrainMethod 
 {
-	float[] singleVector;
+	/**
+	 * Prepare the Panel Segmentation training. 
+	 * @param method	The PanelSeg method
+	 * @param srcFolder	The source folder
+	 * @param rstFolder	The result folder
+	 *
+	 * @return a PanelSegTrain instance with all the parameters are set 
+	 */
+	static PanelSegTrain createPanelSegTrain(String method, Path srcFolder, Path rstFolder)
+	{
+		PanelSegTrain segTrain = new PanelSegTrain(method, srcFolder, rstFolder);
 
+		for (int i = 0 ; i < PanelSeg.labelArray.length; i++)
+		{
+			Path path = srcFolder.resolve("svm_model_" + PanelSeg.labelArray[i]);
+			segTrain.allPaths.add(path);
+			segTrain.methods.add(new PanelSegTrainSvm2SingleVec());
+		}
+		
+		return segTrain;
+	}
+
+	float[] singleVector;
+	
 	@Override
 	public void Train(Path imageFilePath, Path resultFolder) throws Exception 
 	{

@@ -4,9 +4,7 @@ import static org.bytedeco.javacpp.opencv_core.subtract;
 import static org.bytedeco.javacpp.opencv_imgproc.resize;
 
 import java.awt.Rectangle;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collections;
 
 import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.javacpp.FloatPointer;
@@ -79,18 +77,19 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 			candidates.addAll(candidates2);
 		}
 		
-		//Scale back to the original size and sort them
+		//Sort all candidates
 		candidates.sort(new ScoreComp());
-		
-//		figure.segmentationResult = new ArrayList<PanelSegInfo>();
-//		for (int i = 0; i < results.size(); i++)
-//		{
-//			PanelSegInfo segInfo = results.get(i);
-//			Rectangle rect = segInfo.labelRect;
-//            Rectangle orig_rect = new Rectangle((int)(rect.x / scale + .5), (int)(rect.y / scale + .5), (int)(rect.width / scale + .5), (int)(rect.height / scale + .5));
-//            segInfo.labelRect = orig_rect;
-//            figure.segmentationResult.add(segInfo);
-//		}
+
+		//Scale back to the original size, and save the result to figure.segmentationResult
+		figure.segmentationResult = new ArrayList<PanelSegInfo>();
+		for (int i = 0; i < candidates.size(); i++)
+		{
+			PanelSegInfo segInfo = candidates.get(i);
+			Rectangle rect = segInfo.labelRect;
+            Rectangle orig_rect = new Rectangle((int)(rect.x / scale + .5), (int)(rect.y / scale + .5), (int)(rect.width / scale + .5), (int)(rect.height / scale + .5));
+            segInfo.labelRect = orig_rect;
+            figure.segmentationResult.add(segInfo);
+		}
 	}
 	
 	private ArrayList<PanelSegInfo> DetectMultiScale(Mat img, double maxSize, double minSize, char panelLabel, Boolean inverted)
@@ -122,6 +121,11 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 		return results;
 	}
 	
+	/**
+	 * Extract HoG descriptors from gray patch
+	 * @param grayPatch
+	 * @return
+	 */
 	public float[] featureExtraction(Mat grayPatch) 
 	{
         //Size winStride = new Size(8, 8);        Size trainPadding = new Size(0, 0);
