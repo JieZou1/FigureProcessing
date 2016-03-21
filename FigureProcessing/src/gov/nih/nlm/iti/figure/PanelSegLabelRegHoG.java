@@ -4,11 +4,10 @@ import static org.bytedeco.javacpp.opencv_core.subtract;
 import static org.bytedeco.javacpp.opencv_imgproc.resize;
 
 import java.awt.Rectangle;
-import java.security.PrivilegedActionException;
 import java.util.ArrayList;
 
+import org.bytedeco.javacpp.DoublePointer;
 import org.bytedeco.javacpp.FloatPointer;
-import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_core.*;
 import org.bytedeco.javacpp.opencv_objdetect.HOGDescriptor;
 
@@ -63,38 +62,16 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 		ArrayList<PanelSegInfo> results = new ArrayList<PanelSegInfo>();
 		for (int i = 0; i < n; i++)
 		{
-			FloatPointer fp = new FloatPointer(PanelSegLabelRegHoGModels.svmModels[i]);
-			hog.setSVMDetector(new Mat(fp));
+			char panelLabel = labelArray[i];
+			float[] svmModel = PanelSegLabelRegHoGModels.svmModels[i];
+			double minSize = labelMinSizes[i] * scale;
+			double maxSize = labelMaxSizes[i] * scale;
 			
-			{	//Search on original images (after scaling of course)
-				RectVector rectVector = new RectVector();
-				hog.detectMultiScale(imgScaled, rectVector);
-				for (int k = 0; k < rectVector.size(); k++)
-				{
-					Rect labelRect = rectVector.get(k);
-					
-					PanelSegInfo segInfo = new PanelSegInfo();
-					segInfo.labelRect = new Rectangle(labelRect.x(), labelRect.y(), labelRect.width(), labelRect.height());
-					segInfo.panelLabel = "" + PanelSeg.labelArray[i];
-					segInfo.labelInverted = false;
-					results.add(segInfo);
-				}
-			}
+			FloatPointer fp = new FloatPointer(svmModel);			hog.setSVMDetector(new Mat(fp));
 			
-			{	//Search on inverted images (after scaling of course)
-				RectVector rectVector = new RectVector();
-				hog.detectMultiScale(imgeScaledInverted, rectVector);
-				for (int k = 0; k < rectVector.size(); k++)
-				{
-					Rect labelRect = rectVector.get(k);
-					
-					PanelSegInfo segInfo = new PanelSegInfo();
-					segInfo.labelRect = new Rectangle(labelRect.x(), labelRect.y(), labelRect.width(), labelRect.height());
-					segInfo.panelLabel = "" + PanelSeg.labelArray[i];
-					segInfo.labelInverted = true;
-					results.add(segInfo);
-				}
-			}
+			//Search on original and inverted images (after scaling of course)
+			ArrayList<PanelSegInfo> candidates1 = DetectMultiScale(imgScaled, maxSize, minSize, panelLabel, false);
+			ArrayList<PanelSegInfo> candidates2 = DetectMultiScale(imgeScaledInverted, maxSize, minSize, panelLabel, true);
 		}
 		
 		//Scale back to the original size
@@ -107,6 +84,30 @@ public final class PanelSegLabelRegHoG extends PanelSeg
             segInfo.labelRect = orig_rect;
             figure.segmentationResult.add(segInfo);
 		}
+	}
+	
+	private ArrayList<PanelSegInfo> DetectMultiScale(Mat img, double maxSize, double minSize, char panelLabel, Boolean inverted)
+	{
+		ArrayList<PanelSegInfo> results = new ArrayList<PanelSegInfo>();
+		
+		RectVector rectVector = new RectVector();			DoublePointer dp = new DoublePointer();	
+		hog.detectMultiScale(img, rectVector, dp);
+		double[] scores = new double[(int)rectVector.size()]; dp.get(scores);
+		for (int k = 0; k < rectVector.size(); k++)
+		{
+			Rect labelRect = rectVector.get(k);
+			if (labelRect.width() > maxSize || labelRect.height() > maxSize) continue;
+			if (labelRect.width() < minSize || labelRect.height() < minSize) continue;
+			
+			PanelSegInfo segInfo = new PanelSegInfo();
+			segInfo.labelRect = new Rectangle(labelRect.x(), labelRect.y(), labelRect.width(), labelRect.height());
+			segInfo.panelLabel = "" + panelLabel;
+			segInfo.labelInverted = inverted;
+			segInfo.labelScore = scores[k];
+			
+			results.add(segInfo);
+		}
+		return results;
 	}
 	
 	public float[] featureExtraction(Mat grayPatch) 
