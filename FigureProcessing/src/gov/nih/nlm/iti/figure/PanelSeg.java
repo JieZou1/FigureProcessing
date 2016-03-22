@@ -4,7 +4,9 @@ import static org.bytedeco.javacpp.opencv_core.subtract;
 import static org.bytedeco.javacpp.opencv_imgcodecs.CV_LOAD_IMAGE_COLOR;
 import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
 import static org.bytedeco.javacpp.opencv_imgproc.CV_BGR2GRAY;
+import static org.bytedeco.javacpp.opencv_imgproc.CV_FONT_HERSHEY_PLAIN;
 import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
+import static org.bytedeco.javacpp.opencv_imgproc.putText;
 import static org.bytedeco.javacpp.opencv_imgproc.rectangle;
 
 import java.awt.Rectangle;
@@ -104,6 +106,11 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 			{
 				Rectangle rect = panel.labelRect;
 				rectangle(img, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), Scalar.BLUE, 1, 8, 0);
+
+				if (panel.panelLabel != "")
+				{
+					putText(img, panel.panelLabel, new Point(panel.labelRect.x + panel.labelRect.width, panel.labelRect.y + panel.labelRect.height), CV_FONT_HERSHEY_PLAIN, 2.0, Scalar.BLUE, 3, 8, false);
+				}			
 			}
 		}
 

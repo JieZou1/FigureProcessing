@@ -199,10 +199,10 @@ public class PanelSegEval
 			System.out.println("CAUTION: If the <result image folder> exists, the program will delete all files in the <result image folder>");
 			System.out.println();
 			System.out.println("method:");
-			System.out.println("	Jaylene		Jaylene's method based on cross uniform band");
-			System.out.println("	Santosh		Santosh's method based on long line segments");
-			System.out.println("	LabelRegMSER	MSER method for recognizing Label candidate regions");
-			System.out.println("	LabelRegHoG		HoG method for recognizing Label candidate regions");
+			System.out.println("Jaylene		Jaylene's method based on cross uniform band");
+			System.out.println("Santosh		Santosh's method based on long line segments");
+			System.out.println("LabelRegMSER	MSER method for recognizing Label candidate regions");
+			System.out.println("LabelRegHoG	HoG method for recognizing Label candidate regions");
 			return;
 		}
 		
@@ -230,8 +230,8 @@ public class PanelSegEval
 		
 		//Do segmentation
 		PanelSegEval eval = new PanelSegEval(method, src_path, rst_path, evaluation_file);
-		eval.segSingleThread();
-		//eval.segMultiThreads(10);
+		//eval.segSingleThread();
+		eval.segMultiThreads(10);
 		
 		//Do Evaluation
 		//eval.LoadPanelSegGt();
