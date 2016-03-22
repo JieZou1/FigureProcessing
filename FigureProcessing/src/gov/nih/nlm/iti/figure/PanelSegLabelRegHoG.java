@@ -1,6 +1,5 @@
 package gov.nih.nlm.iti.figure;
 
-import static org.bytedeco.javacpp.opencv_core.subtract;
 import static org.bytedeco.javacpp.opencv_imgproc.resize;
 
 import java.awt.Rectangle;
@@ -56,7 +55,8 @@ public final class PanelSegLabelRegHoG extends PanelSeg
         int _height = (int)(image.rows() * scale + 0.5);
         Size newSize = new Size(_width, _height);
         Mat imgScaled = new Mat(); resize(figure.imageGray, imgScaled, newSize);
-		Mat imgeScaledInverted = subtract(Scalar.all(255), imgScaled).asMat();
+        Mat imgeScaledInverted = new Mat(); resize(figure.imageGrayInverted, imgeScaledInverted, newSize);
+		//Mat imgeScaledInverted = subtract(Scalar.all(255), imgScaled).asMat();
 		
 		int n = PanelSeg.labelArray.length;
 		ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
@@ -73,23 +73,51 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 			ArrayList<PanelSegInfo> candidates1 = DetectMultiScale(imgScaled, maxSize, minSize, panelLabel, false);
 			ArrayList<PanelSegInfo> candidates2 = DetectMultiScale(imgeScaledInverted, maxSize, minSize, panelLabel, true);
 			
-			candidates.addAll(candidates1);
-			candidates.addAll(candidates2);
+			if (candidates1 != null) candidates.addAll(candidates1);
+			if (candidates2 != null) candidates.addAll(candidates2);
 		}
 		
-		//Sort all candidates
-		candidates.sort(new ScoreComp());
-
-		//Scale back to the original size, and save the result to figure.segmentationResult
-		figure.segmentationResult = new ArrayList<PanelSegInfo>();
-		for (int i = 0; i < candidates.size(); i++)
+		if (candidates.size() > 0)
 		{
-			PanelSegInfo segInfo = candidates.get(i);
-			Rectangle rect = segInfo.labelRect;
-            Rectangle orig_rect = new Rectangle((int)(rect.x / scale + .5), (int)(rect.y / scale + .5), (int)(rect.width / scale + .5), (int)(rect.height / scale + .5));
-            segInfo.labelRect = orig_rect;
-            figure.segmentationResult.add(segInfo);
-		}
+			//Sort all candidates
+			candidates.sort(new ScoreComp());
+			
+			//Remove largely overlapped candidates
+			ArrayList<PanelSegInfo> results = new ArrayList<PanelSegInfo>();        results.add(candidates.get(0));
+	        for (int i = 1; i < candidates.size(); i++)
+	        {
+	        	PanelSegInfo obj = candidates.get(i);            Rectangle obj_rect = obj.labelRect;
+	            double obj_area = obj_rect.width * obj_rect.height;
+
+	            //Check with existing ones, if significantly overlapping with existing ones, ignore
+	            Boolean overlapping = false;
+	            for (int k = 0; k < results.size(); k++)
+	            {
+	                Rectangle result_rect = results.get(k).labelRect;
+	                Rectangle intersection = obj_rect.intersection(result_rect);
+	                if (intersection.isEmpty()) continue;
+	                double intersection_area = intersection.width * intersection.height;
+	                double result_area = result_rect.width * result_rect.height;
+	                if (intersection_area > obj_area / 2 || intersection_area > result_area / 2)
+	                {
+	                    overlapping = true; break;
+	                }
+	            }
+	            if (!overlapping) results.add(obj);
+	        }
+	        candidates = results;
+	        
+			//Scale back to the original size, and save the result to figure.segmentationResult
+			figure.segmentationResult = new ArrayList<PanelSegInfo>();
+			for (int i = 0; i < candidates.size(); i++)
+			{
+				PanelSegInfo segInfo = candidates.get(i);
+				Rectangle rect = segInfo.labelRect;
+	            Rectangle orig_rect = new Rectangle((int)(rect.x / scale + .5), (int)(rect.y / scale + .5), (int)(rect.width / scale + .5), (int)(rect.height / scale + .5));
+	            segInfo.labelRect = orig_rect;
+	            figure.segmentationResult.add(segInfo);
+			}
+		}		
 	}
 	
 	private ArrayList<PanelSegInfo> DetectMultiScale(Mat img, double maxSize, double minSize, char panelLabel, Boolean inverted)
@@ -98,7 +126,10 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 		
 		RectVector rectVector = new RectVector();			DoublePointer dp = new DoublePointer();	
 		hog.detectMultiScale(img, rectVector, dp);
-		double[] scores = new double[(int)rectVector.size()]; dp.get(scores);
+		
+		if (rectVector == null || rectVector.size() == 0) return null;
+		
+		double[] scores = new double[(int)rectVector.size()]; dp.get(scores);		
 		for (int k = 0; k < rectVector.size(); k++)
 		{
 			Rect labelRect = rectVector.get(k);

@@ -16,7 +16,7 @@ import java.nio.file.Paths;
  * @author Jie Zou
  *
  */
-final class PanelSegTrainLabelPatchCrop extends PanelSegTrainMethod 
+final class PanelSegTrainLabelCrop extends PanelSegTrainMethod 
 {
 	/**
 	 * Prepare the Panel Segmentation training. 
@@ -38,7 +38,7 @@ final class PanelSegTrainLabelPatchCrop extends PanelSegTrainMethod
 				if (!filename.endsWith(".jpg")) continue;
 				
 				segTrain.allPaths.add(path);
-				segTrain.methods.add(new PanelSegTrainLabelPatchCrop());
+				segTrain.methods.add(new PanelSegTrainLabelCrop());
 			}
 		}
 		catch (IOException e) 

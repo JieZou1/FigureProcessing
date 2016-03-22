@@ -17,7 +17,7 @@ import org.bytedeco.javacpp.opencv_core.*;
  * @author Jie Zou
  *
  */
-final class PanelSegTrainLabelPatchNeg extends PanelSegTrainMethod 
+final class PanelSegTrainLabelNeg extends PanelSegTrainMethod 
 {
 	/**
 	 * Prepare the Panel Segmentation training. 
@@ -39,7 +39,7 @@ final class PanelSegTrainLabelPatchNeg extends PanelSegTrainMethod
 				if (!filename.endsWith(".jpg")) continue;
 				
 				segTrain.allPaths.add(path);
-				segTrain.methods.add(new PanelSegTrainLabelPatchNeg());
+				segTrain.methods.add(new PanelSegTrainLabelNeg());
 			}
 		}
 		catch (IOException e) 

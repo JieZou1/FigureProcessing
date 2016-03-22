@@ -1,7 +1,5 @@
 package gov.nih.nlm.iti.figure;
 
-import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -63,8 +61,8 @@ class PanelSegTrain
 		PanelSegTrainTask task = new PanelSegTrainTask(this, 0, allPaths.size(), seqThreshold);
 		task.invoke();
 		
-		if (method.equals("LabelPatchHoG")) 
-			PanelSegTrainLabelPatchHoG.generateLabelPatchHoGTrain(flags, methods, rstFolder.resolve("train.txt").toString());
+		if (method.equals("LabelHoG")) 
+			PanelSegTrainLabelHoG.generateLabelPatchHoGTrain(flags, methods, rstFolder.resolve("train.txt").toString());
 		else if (method.equals("Svm2SingleVec"))
 			PanelSegTrainSvm2SingleVec.generateSingleVec(methods, rstFolder.resolve("PanelSegLabelRegHoGModels.java").toString());
 		
@@ -84,8 +82,8 @@ class PanelSegTrain
 			train(i);
 		}
 		
-		if (method.equals("LabelPatchHoG")) 
-			PanelSegTrainLabelPatchHoG.generateLabelPatchHoGTrain(flags, methods, rstFolder.resolve("train.txt").toString());
+		if (method.equals("LabelHoG")) 
+			PanelSegTrainLabelHoG.generateLabelPatchHoGTrain(flags, methods, rstFolder.resolve("train.txt").toString());
 		else if (method.equals("Svm2SingleVec"))
 			PanelSegTrainSvm2SingleVec.generateSingleVec(methods, "PanelSegLabelRegHoGModels.java");
 		
@@ -103,11 +101,12 @@ class PanelSegTrain
 			System.out.println("CAUTION: If the <result folder> exists, the program will delete all files in the <result image folder>");
 			System.out.println();
 			System.out.println("method:");
-			System.out.println("	GTViz			Generate Ground Truth Visualization, i.e., superimpose annotations on the original figure images");
-			System.out.println("	LabelPatchCrop	Crop the label patches and normalized them for training");
-			System.out.println("	LabelPatchNeg	Randomly generate some negative patches for label recognition");
-			System.out.println("	LabelPatchHoG	Compute HoG features for label detection");
-			System.out.println("	Svm2SingleVec	Convert Linear SVM model to Single Vector");
+			System.out.println("GTViz	Generate Ground Truth Visualization, i.e., superimpose annotations on the original figure images");
+			System.out.println("LabelCrop	Crop the label patches and normalized them for training");
+			System.out.println("LabelNeg	Randomly generate some negative patches for label recognition");
+			System.out.println("LabelHoG	Compute HoG features for label detection");
+			System.out.println("Svm2SingleVec	Convert Linear SVM model to Single Vector");
+			System.out.println("LabelBootStrap	BootStrap Neg Patchs for HoG method of Label Recongition");
 			return;
 		}
 		
@@ -127,17 +126,20 @@ class PanelSegTrain
 		case "GTViz": 
 			train = PanelSegTrainGTViz.createPanelSegTrain(method, src_path, rst_path);
 			break;
-		case "LabelPatchCrop": 
-			train = PanelSegTrainLabelPatchCrop.createPanelSegTrain(method, src_path, rst_path);
+		case "LabelCrop": 
+			train = PanelSegTrainLabelCrop.createPanelSegTrain(method, src_path, rst_path);
 			break;
-		case "LabelPatchNeg": 
-			train = PanelSegTrainLabelPatchNeg.createPanelSegTrain(method, src_path, rst_path);
+		case "LabelNeg": 
+			train = PanelSegTrainLabelNeg.createPanelSegTrain(method, src_path, rst_path);
 			break;
-		case "LabelPatchHoG":
-			train = PanelSegTrainLabelPatchHoG.createPanelSegTrain(method, src_path, rst_path);
+		case "LabelHoG":
+			train = PanelSegTrainLabelHoG.createPanelSegTrain(method, src_path, rst_path);
 			break;
 		case "Svm2SingleVec": 
 			train = PanelSegTrainSvm2SingleVec.createPanelSegTrain(method, src_path, rst_path);
+			break;
+		case "LabelBootStrap": 
+			train = PanelSegTrainLabelBootStrap.createPanelSegTrain(method, src_path, rst_path);
 			break;
 		default:
 			System.out.println(method + " is not known.");
@@ -145,8 +147,8 @@ class PanelSegTrain
 		}
 		
 		//Do Training
-		train.trainSingleThread();
-		//train.trainMultiThreads(10);
+		//train.trainSingleThread();
+		train.trainMultiThreads(10);
 		
 	}	
 

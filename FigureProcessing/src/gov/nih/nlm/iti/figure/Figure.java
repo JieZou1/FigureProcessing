@@ -15,6 +15,7 @@ class Figure
 {
 	Mat image;		//The original figure image, has to be BGR image
 	Mat imageGray;	//The gray image converted from original BGR image
+	Mat imageGrayInverted;	//The inverted gray image
 	int imageWidth, imageHeight;
 	
 	ArrayList<PanelSegInfo> segmentationResult;

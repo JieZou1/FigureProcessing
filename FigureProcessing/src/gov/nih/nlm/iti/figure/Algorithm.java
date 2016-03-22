@@ -1,6 +1,7 @@
 package gov.nih.nlm.iti.figure;
 
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 import org.bytedeco.javacpp.opencv_core.Mat;
@@ -131,10 +132,27 @@ abstract public class Algorithm
 		return null;
 	}
 
+	/**
+	 * Find the boundingbox of a binary image. White as foreground
+	 * @param bina
+	 * @return
+	 */
 	static Rect findBoundingbox(Mat bina)
 	{
 		Mat points = new Mat();	findNonZero(bina,points);
 		Rect minRect=boundingRect(points);	
 		return minRect;
+	}
+	
+	/**
+	 * Crop the ROI from the image
+	 * @param image
+	 * @param roi
+	 * @return
+	 */
+	static Mat CropImage(Mat image, Rectangle roi)
+	{
+		Rect rect = new Rect(roi.x, roi.y, roi.width, roi.height);
+		return image.apply(rect);
 	}
 }

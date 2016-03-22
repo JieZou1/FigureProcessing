@@ -16,7 +16,7 @@ import org.bytedeco.javacpp.opencv_core.*;
  * @author Jie Zou
  *
  */
-final class PanelSegTrainLabelPatchHoG extends PanelSegTrainMethod
+final class PanelSegTrainLabelHoG extends PanelSegTrainMethod
 {
 	/**
 	 * Prepare the Panel Segmentation training. 
@@ -40,7 +40,7 @@ final class PanelSegTrainLabelPatchHoG extends PanelSegTrainMethod
 				String filename = path.toString();
 				if (!filename.endsWith(".bmp")) continue;
 				segTrain.allPaths.add(path);
-				segTrain.methods.add(new PanelSegTrainLabelPatchHoG());
+				segTrain.methods.add(new PanelSegTrainLabelHoG());
 				segTrain.flags.add(true);
 			}
 		}
@@ -59,7 +59,7 @@ final class PanelSegTrainLabelPatchHoG extends PanelSegTrainMethod
 				String filename = path.toString();
 				if (!filename.endsWith(".bmp")) continue;
 				segTrain.allPaths.add(path);
-				segTrain.methods.add(new PanelSegTrainLabelPatchHoG());
+				segTrain.methods.add(new PanelSegTrainLabelHoG());
 				segTrain.flags.add(false);
 			}
 		}
@@ -68,6 +68,26 @@ final class PanelSegTrainLabelPatchHoG extends PanelSegTrainMethod
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+//		//Standard Negative samples
+//		//Negative samples
+//		Path neg0Path = srcFolder.resolve("neg0");
+//		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(neg0Path)) 
+//		{			
+//			for (Path path : dirStrm)
+//			{
+//				String filename = path.toString();
+//				if (!filename.endsWith(".bmp")) continue;
+//				segTrain.allPaths.add(path);
+//				segTrain.methods.add(new PanelSegTrainLabelHoG());
+//				segTrain.flags.add(false);
+//			}
+//		}
+//		catch (IOException e) 
+//		{
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		
 		return segTrain;
 	}
@@ -91,7 +111,7 @@ final class PanelSegTrainLabelPatchHoG extends PanelSegTrainMethod
 		for (int i = 0; i < n; i++)
 		{
 			targets[i] = flags.get(i) == true ? 1 : -1;
-			PanelSegTrainLabelPatchHoG method = (PanelSegTrainLabelPatchHoG)methods.get(i);
+			PanelSegTrainLabelHoG method = (PanelSegTrainLabelHoG)methods.get(i);
 			features[i] = method.feature;
 		}
 		LibSvmEx.SaveInLibSVMFormat(filename, targets, features);

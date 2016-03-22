@@ -1,5 +1,6 @@
 package gov.nih.nlm.iti.figure;
 
+import static org.bytedeco.javacpp.opencv_core.subtract;
 import static org.bytedeco.javacpp.opencv_imgcodecs.CV_LOAD_IMAGE_COLOR;
 import static org.bytedeco.javacpp.opencv_imgcodecs.imread;
 import static org.bytedeco.javacpp.opencv_imgproc.CV_BGR2GRAY;
@@ -39,7 +40,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	/**
 	 * Some common initialization functions for all extended panel segmentation algorithms, including: <p>
 	 * 1. Construct Figure object, figure <p>
-	 * 2. Generate gray image, imageGray <p>
+	 * 2. Generate gray image, imageGray, imageGrayInverted <p>
 	 * 3. Construct segmentation result, segmentationResult.
 	 * 
 	 * Generally, the segment function of all extended classes should call this super class function 
@@ -49,6 +50,8 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	{
 		figure = new Figure(image);	//Construct a figure object for saving processing results
 		figure.imageGray = new Mat();		cvtColor(figure.image, figure.imageGray, CV_BGR2GRAY);
+		figure.imageGrayInverted = subtract(Scalar.all(255), figure.imageGray).asMat();
+		
 		figure.segmentationResult = new ArrayList<PanelSegInfo>();		
 	}
 	/**
