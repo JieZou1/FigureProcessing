@@ -43,19 +43,15 @@ class PanelSegTrain
 		Path path = allPaths.get(i);		PanelSegTrainMethod method = methods.get(i);
 		
 		String filename = path.toString();
-		if (!filename.endsWith("1465-9921-11-35-5.jpg") && 
-				!filename.endsWith("1471-213X-7-3-4.jpg") &&
-				!filename.endsWith("1471-213X-7-55-6.jpg") &&
-				!filename.endsWith("1471-213X-8-105-3.jpg") &&
-				!filename.endsWith("1471-2121-8-52-2.jpg") &&
-				!filename.endsWith("1471-2121-10-48-8.jpg") &&
-				!filename.endsWith("1471-2121-10-48-10.jpg") &&
-				!filename.endsWith("1471-2407-8-29-4.jpg") &&
-				!filename.endsWith("1472-6750-8-56-3.jpg") &&
-				!filename.endsWith("1476-4598-5-14-1.jpg") &&
-				!filename.endsWith("1745-6150-4-31-3.jpg") &&
-				!filename.endsWith("1746-6148-2-9-1.jpg") &&
-				!filename.endsWith("ar1039-2.jpg")) return;
+		if (!filename.endsWith("1471-213X-7-26-5.jpg") && 
+				!filename.endsWith("1471-2121-10-48-4.jpg") &&
+				!filename.endsWith("1471-2210-10-14-9.jpg") &&
+				!filename.endsWith("1471-2407-10-578-3.jpg") &&
+				!filename.endsWith("1472-6750-2-11-2.jpg") &&
+				!filename.endsWith("1472-6750-7-69-3.jpg") &&
+				!filename.endsWith("1475-2875-6-59-4.jpg") &&
+				!filename.endsWith("1476-9255-7-12-18.jpg"))
+			return;
 		System.out.println("Processing "+ filename);
 		method.Train(path, rstFolder);
 	}
