@@ -43,8 +43,14 @@ class PanelSegTrain
 		Path path = allPaths.get(i);		PanelSegTrainMethod method = methods.get(i);
 		
 		String filename = path.toString();
-		if (!filename.endsWith("1471-244X-5-38-3.jpg"))
-			return;
+//		if (!filename.endsWith("1471-2326-3-3-1.jpg") &&
+//				!filename.endsWith("1477-7827-6-39-3.jpg")	&&
+//				!filename.endsWith("1471-2210-10-14-11.jpg")	&&
+//				!filename.endsWith("1471-2474-4-20-3.jpg")	&&
+//				!filename.endsWith("1472-6890-9-4-1.jpg")	&&
+//				!filename.endsWith("1477-7827-6-16-5.jpg")	&&
+//				!filename.endsWith("1741-7007-7-28-6.jpg"))
+//			return;
 		System.out.println("Processing "+ filename);
 		method.Train(path, rstFolder);
 	}
@@ -65,7 +71,7 @@ class PanelSegTrain
 		if (method.equals("LabelHoG")) 
 			PanelSegTrainLabelHoG.generateLabelPatchHoGTrain(flags, methods, rstFolder.resolve("train.txt").toString());
 		else if (method.equals("Svm2SingleVec"))
-			PanelSegTrainSvm2SingleVec.generateSingleVec(methods, rstFolder.resolve("PanelSegLabelRegHoGModels.java").toString());
+			PanelSegTrainSvm2SingleVec.generateSingleVec(methods, "PanelSegLabelRegHoGModels.java");
 		
 		System.out.println("Processing Completed!");
 	}

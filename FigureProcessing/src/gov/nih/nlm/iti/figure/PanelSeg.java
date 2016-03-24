@@ -35,9 +35,9 @@ enum Orientation { Horizontal, Vertical }
  */
 public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm 
 {
-	static char[] labelArray = {'c'};	//all possible panel labels
-	static int[] labelMinSizes = {10};	//The minimum side length of panel labels
-	static int[] labelMaxSizes = {70};	//The maximum side length of panel labels 
+	static char[] labelArray = { 'a','A','b','B','c','d','D','e','E','f','F','g','G','h','H','i','I','j','J','k','l','L','M','N','o','p','Q','R'};	//all possible panel labels
+	static int[] labelMinSizes = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10};	//The minimum side length of panel labels
+	static int[] labelMaxSizes = {70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70};	//The maximum side length of panel labels 
 	
 	/**
 	 * Some common initialization functions for all extended panel segmentation algorithms, including: <p>

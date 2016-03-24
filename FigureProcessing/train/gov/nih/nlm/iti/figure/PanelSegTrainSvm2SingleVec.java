@@ -26,7 +26,8 @@ final class PanelSegTrainSvm2SingleVec extends PanelSegTrainMethod
 
 		for (int i = 0 ; i < PanelSeg.labelArray.length; i++)
 		{
-			Path path = srcFolder.resolve("svm_model_" + PanelSeg.labelArray[i]);
+			char ch = PanelSeg.labelArray[i];
+			Path path = Character.isLowerCase(ch) ? srcFolder.resolve("svm_model_" + PanelSeg.labelArray[i]) : srcFolder.resolve("svm_model_" + PanelSeg.labelArray[i] +"_");
 			segTrain.allPaths.add(path);
 			segTrain.methods.add(new PanelSegTrainSvm2SingleVec());
 		}
@@ -44,41 +45,40 @@ final class PanelSegTrainSvm2SingleVec extends PanelSegTrainMethod
 	
 	static void generateSingleVec(ArrayList<PanelSegTrainMethod> methods, String filename)
 	{
-		int n = PanelSeg.labelArray.length;
-		
     	try (PrintWriter pw = new PrintWriter(filename))
-        {
+    	{
     		pw.println("package gov.nih.nlm.iti.figure;");
     		pw.println();
 
-            pw.println("final class " + filename.substring(0, filename.indexOf('.')));
-            pw.println("{");
-    		
-            pw.println("	protected static float[][] svmModels = ");
-            pw.println("    {");
+    		int n = PanelSeg.labelArray.length;
     		
     		for (int i = 0; i < n; i++)
     		{
     			PanelSegTrainSvm2SingleVec method = (PanelSegTrainSvm2SingleVec)methods.get(i);
     			float[] singleVector = method.singleVector;
-                
+    			
+    			String classname = filename.substring(0, filename.lastIndexOf('.') - 1); 
+    			classname =	Character.isUpperCase(PanelSeg.labelArray[i]) ? classname + "_" + PanelSeg.labelArray[i] + "_" : classname + "_" + PanelSeg.labelArray[i];
+
+	            pw.println("final class " + classname);
+	            pw.println("{");
+	    		
+	            pw.println("	public static float[] svmModel = ");
+	    		
                 pw.println("    	{");
                 for (int k = 0; k < singleVector.length; k++)
                 {
                     pw.print(singleVector[k] + "f,");
                 }
         		pw.println();
-                pw.println("    	},");
+	            pw.println("    };");
+	            pw.println("}");
     		}
-    		
-            pw.println("    };");
-            pw.println("}");
-        } catch (FileNotFoundException e) {
+    	}
+    	catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
 		
 	}
 	

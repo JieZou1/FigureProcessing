@@ -3,6 +3,7 @@ package gov.nih.nlm.iti.figure;
 import static org.bytedeco.javacpp.opencv_imgproc.resize;
 
 import java.awt.Rectangle;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 import org.bytedeco.javacpp.DoublePointer;
@@ -27,9 +28,25 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 //    static private int nLevels = 64;
 	
 	private HOGDescriptor hog;
+	private float[][] svmModels;
 	
 	public PanelSegLabelRegHoG() 
 	{
+		int n = PanelSeg.labelArray.length;		svmModels = new float[n][];
+		for (int i = 0; i < n; i++)
+		{
+			String classString = "gov.nih.nlm.iti.figure.PanelSegLabelRegHoGModel_";
+			classString += Character.isUpperCase(PanelSeg.labelArray[i]) ?  PanelSeg.labelArray[i] + "_" : PanelSeg.labelArray[i];
+			try {
+				Class<?> cls = Class.forName(classString);
+				Field field = cls.getField("svmModel");
+				svmModels[i] = (float[])field.get(null);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 	    Size winSize_32 = new Size(32, 32);
 	    Size blockSize = new Size(16, 16);
 	    Size blockStride = new Size(8, 8);
@@ -49,6 +66,8 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 	{
 		super.segment(image);
 
+		figure.segmentationResultIndividualLabel = new ArrayList<ArrayList<PanelSegInfo>>();
+		
 		//Resize the image. We assume the smallest label patch is 10x10.
         double scale = 32.0 / 10.0; //check statistics.txt to decide this scaling factor.
         int _width = (int)(image.cols() * scale + 0.5);
@@ -59,11 +78,10 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 		//Mat imgeScaledInverted = subtract(Scalar.all(255), imgScaled).asMat();
 		
 		int n = PanelSeg.labelArray.length;
-		ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
 		for (int i = 0; i < n; i++)
 		{
 			char panelLabel = labelArray[i];
-			float[] svmModel = PanelSegLabelRegHoGModels.svmModels[i];
+			float[] svmModel = svmModels[i];
 			double minSize = labelMinSizes[i] * scale;
 			double maxSize = labelMaxSizes[i] * scale;
 			
@@ -73,56 +91,61 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 			ArrayList<PanelSegInfo> candidates1 = DetectMultiScale(imgScaled, maxSize, minSize, panelLabel, false);
 			ArrayList<PanelSegInfo> candidates2 = DetectMultiScale(imgeScaledInverted, maxSize, minSize, panelLabel, true);
 			
+			ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
 			if (candidates1 != null) candidates.addAll(candidates1);
 			if (candidates2 != null) candidates.addAll(candidates2);
+			
+			if (candidates.size() > 0)
+			{
+				//Sort candidates and remove largely overlapped candidates.
+				candidates.sort(new ScoreComp());
+				
+				//Remove largely overlapped candidates
+				ArrayList<PanelSegInfo> results = new ArrayList<PanelSegInfo>();        results.add(candidates.get(0));
+		        for (int j = 1; j < candidates.size(); j++)
+		        {
+		        	PanelSegInfo obj = candidates.get(j);            Rectangle obj_rect = obj.labelRect;
+		            double obj_area = obj_rect.width * obj_rect.height;
+
+		            //Check with existing ones, if significantly overlapping with existing ones, ignore
+		            Boolean overlapping = false;
+		            for (int k = 0; k < results.size(); k++)
+		            {
+		                Rectangle result_rect = results.get(k).labelRect;
+		                Rectangle intersection = obj_rect.intersection(result_rect);
+		                if (intersection.isEmpty()) continue;
+		                double intersection_area = intersection.width * intersection.height;
+		                double result_area = result_rect.width * result_rect.height;
+		                if (intersection_area > obj_area / 2 || intersection_area > result_area / 2)
+		                {
+		                    overlapping = true; break;
+		                }
+		            }
+		            if (!overlapping) results.add(obj);
+		        }
+		        candidates = results;
+
+				//Scale back to the original size, and save the result to figure.segmentationResultIndividualLabel
+				ArrayList<PanelSegInfo> segmentationResult = new ArrayList<PanelSegInfo>();
+				for (int j = 0; j < candidates.size(); j++)
+				{
+					PanelSegInfo segInfo = candidates.get(j);
+					Rectangle rect = segInfo.labelRect;
+		            Rectangle orig_rect = new Rectangle((int)(rect.x / scale + .5), (int)(rect.y / scale + .5), (int)(rect.width / scale + .5), (int)(rect.height / scale + .5));
+		            segInfo.labelRect = orig_rect;
+		            segmentationResult.add(segInfo);
+				}
+				figure.segmentationResultIndividualLabel.add(segmentationResult);
+			}
+			else figure.segmentationResultIndividualLabel.add(null);
 		}
 		
-		if (candidates.size() > 0)
-		{
-			//Sort all candidates
-			candidates.sort(new ScoreComp());
-			
-			//Remove largely overlapped candidates
-			ArrayList<PanelSegInfo> results = new ArrayList<PanelSegInfo>();        results.add(candidates.get(0));
-	        for (int i = 1; i < candidates.size(); i++)
-	        {
-	        	PanelSegInfo obj = candidates.get(i);            Rectangle obj_rect = obj.labelRect;
-	            double obj_area = obj_rect.width * obj_rect.height;
-
-	            //Check with existing ones, if significantly overlapping with existing ones, ignore
-	            Boolean overlapping = false;
-	            for (int k = 0; k < results.size(); k++)
-	            {
-	                Rectangle result_rect = results.get(k).labelRect;
-	                Rectangle intersection = obj_rect.intersection(result_rect);
-	                if (intersection.isEmpty()) continue;
-	                double intersection_area = intersection.width * intersection.height;
-	                double result_area = result_rect.width * result_rect.height;
-	                if (intersection_area > obj_area / 2 || intersection_area > result_area / 2)
-	                {
-	                    overlapping = true; break;
-	                }
-	            }
-	            if (!overlapping) results.add(obj);
-	        }
-	        candidates = results;
-	        
-			//Scale back to the original size, and save the result to figure.segmentationResult
-			figure.segmentationResult = new ArrayList<PanelSegInfo>();
-			for (int i = 0; i < candidates.size(); i++)
-			{
-				PanelSegInfo segInfo = candidates.get(i);
-				Rectangle rect = segInfo.labelRect;
-	            Rectangle orig_rect = new Rectangle((int)(rect.x / scale + .5), (int)(rect.y / scale + .5), (int)(rect.width / scale + .5), (int)(rect.height / scale + .5));
-	            segInfo.labelRect = orig_rect;
-	            figure.segmentationResult.add(segInfo);
-			}
-		}		
+		//TODO: merge all segmentationResultIndividualLabel to one set of label result and save to segmentationResult
 	}
 	
 	private ArrayList<PanelSegInfo> DetectMultiScale(Mat img, double maxSize, double minSize, char panelLabel, Boolean inverted)
 	{
-		ArrayList<PanelSegInfo> results = new ArrayList<PanelSegInfo>();
+		ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
 		
 		RectVector rectVector = new RectVector();			DoublePointer dp = new DoublePointer();	
 		hog.detectMultiScale(img, rectVector, dp);
@@ -139,7 +162,7 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 			int centerX = labelRect.x() + labelRect.width() / 2;
 			int centerY = labelRect.y() + labelRect.height() / 2;
 			if (centerX <= 0 || centerX >= img.cols()) continue;
-			if (centerY <= 0 || centerY >= img.rows()) continue; //We ignore cases, where the detected patch is halfly outside the image.
+			if (centerY <= 0 || centerY >= img.rows()) continue; //We ignore cases, where the detected patch is half outside the image.
 			
 			PanelSegInfo segInfo = new PanelSegInfo();
 			segInfo.labelRect = new Rectangle(labelRect.x(), labelRect.y(), labelRect.width(), labelRect.height());
@@ -147,9 +170,9 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 			segInfo.labelInverted = inverted;
 			segInfo.labelScore = scores[k];
 			
-			results.add(segInfo);
+			candidates.add(segInfo);
 		}
-		return results;
+		return candidates;
 	}
 	
 	/**

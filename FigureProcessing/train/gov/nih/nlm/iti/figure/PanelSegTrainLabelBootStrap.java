@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 
+import org.apache.commons.io.output.NullWriter;
 import org.bytedeco.javacpp.opencv_core.*;
 
 /**
@@ -59,25 +61,31 @@ final class PanelSegTrainLabelBootStrap extends PanelSegTrainMethod
 		hog.segment(image_file_path);
 		
 		//Save detected patches
-		for (int i = 0; i < hog.figure.segmentationResult.size(); i++)
+		for (int i = 0; i < hog.figure.segmentationResultIndividualLabel.size(); i++)
 		{
-			if (i == 3) break; //We just save the top 3 patches for training, in order to avoiding collecting a very large training set at the beginning.
+			ArrayList<PanelSegInfo> segmentationResult = hog.figure.segmentationResultIndividualLabel.get(i);
+			if (segmentationResult == null) continue;
 			
-			PanelSegInfo segInfo = hog.figure.segmentationResult.get(i);
-			Rectangle rectangle = segInfo.labelRect;
-			
-			Mat patch = segInfo.labelInverted ? Algorithm.CropImage(hog.figure.imageGrayInverted, rectangle) : 
-				Algorithm.CropImage(hog.figure.imageGray, rectangle);
-			resize(patch, patch, new Size(32, 32)); //Resize to 32x32 for easy browsing the results
-			
-			//Construct filename
-			Path resultPatchFolder = resultFolder.resolve(segInfo.panelLabel);	if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
-			String resultFilename = imageFilePath.getFileName().toString();
-			int pos = resultFilename.lastIndexOf('.');
-			
-			resultFilename = resultFilename.substring(0, pos) + "." + rectangle.toString() + segInfo.labelInverted + ".bmp";
-			Path resultPatchFile = resultPatchFolder.resolve(resultFilename);
-			imwrite(resultPatchFile.toString(), patch);
+			for (int j = 0; j < segmentationResult.size(); j++)
+			{
+				if (j == 3) break; //We just save the top 3 patches for training, in order to avoiding collecting a very large training set at the beginning.
+				
+				PanelSegInfo segInfo = segmentationResult.get(j);
+				Rectangle rectangle = segInfo.labelRect;
+				
+				Mat patch = segInfo.labelInverted ? Algorithm.CropImage(hog.figure.imageGrayInverted, rectangle) : 
+					Algorithm.CropImage(hog.figure.imageGray, rectangle);
+				resize(patch, patch, new Size(32, 32)); //Resize to 32x32 for easy browsing the results
+				
+				//Construct filename
+				Path resultPatchFolder = resultFolder.resolve(segInfo.panelLabel);	if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
+				String resultFilename = imageFilePath.getFileName().toString();
+				int pos = resultFilename.lastIndexOf('.');
+				
+				resultFilename = resultFilename.substring(0, pos) + "." + rectangle.toString() + segInfo.labelInverted + ".bmp";
+				Path resultPatchFile = resultPatchFolder.resolve(resultFilename);
+				imwrite(resultPatchFile.toString(), patch);
+			}
 		}
 	}
 

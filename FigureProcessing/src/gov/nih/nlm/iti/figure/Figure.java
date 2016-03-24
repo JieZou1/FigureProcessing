@@ -18,7 +18,9 @@ class Figure
 	Mat imageGrayInverted;	//The inverted gray image
 	int imageWidth, imageHeight;
 	
-	ArrayList<PanelSegInfo> segmentationResult;
+	ArrayList<ArrayList<PanelSegInfo>> segmentationResultIndividualLabel; //The segmentation results for each individual labels
+	
+	ArrayList<PanelSegInfo> segmentationResult;	//The finally segmentation results
 	
 	//Below info is collected from LabelStatistics.txt
 	static final int label_box_max_width = 70;
