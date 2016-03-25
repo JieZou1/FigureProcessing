@@ -33,7 +33,8 @@ final class PanelSegTrainLabelHoG extends PanelSegTrainMethod
 		segTrain.flags = new ArrayList<Boolean>();
 		
 		//Positive samples
-		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(srcFolder)) 
+		Path posPath = srcFolder.resolve("pos");
+		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(posPath)) 
 		{			
 			for (Path path : dirStrm)
 			{
