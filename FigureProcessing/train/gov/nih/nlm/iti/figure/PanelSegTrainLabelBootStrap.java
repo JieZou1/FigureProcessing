@@ -10,7 +10,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-import org.apache.commons.io.output.NullWriter;
 import org.bytedeco.javacpp.opencv_core.*;
 
 /**
