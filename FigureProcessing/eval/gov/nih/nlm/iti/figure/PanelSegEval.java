@@ -28,6 +28,10 @@ public class PanelSegEval
 	ArrayList<PanelSeg> segmentors;
 	XStream xStream;
 	
+	ArrayList<String> autoXMLPaths; PanelSegInfo[][] autoPanels; //Automatic segmentation files and results
+	ArrayList<String> gtXMLPaths; ArrayList<ArrayList<PanelSegInfo>> gtPanels; //Ground truth data
+	
+	
 	/**
 	 * Prepare the Panel Segmentation evaluation. 
 	 * @param method	The PanelSeg method
@@ -69,14 +73,14 @@ public class PanelSegEval
 	
 	void loadPanelSegResult() throws Exception
 	{
-		ArrayList<String> allXMLPaths = new ArrayList<String>();
+		autoXMLPaths = new ArrayList<String>();
 		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(rstFolder)) 
 		{			
 			for (Path path : dirStrm)
 			{
 				String filename = path.toString();
 				if (!filename.endsWith(".xml")) continue;
-				allXMLPaths.add(filename);
+				autoXMLPaths.add(filename);
 			}
 		}
 		catch (IOException e) 
@@ -85,22 +89,23 @@ public class PanelSegEval
 			e.printStackTrace();
 		}
 		
-		for (int i = 0; i < allXMLPaths.size(); i++)
+		autoPanels = new PanelSegInfo[autoXMLPaths.size()][];
+		for (int i = 0; i < autoXMLPaths.size(); i++)
 		{
-			PanelSeg.loadPanelSegResult(allXMLPaths.get(i));
+			autoPanels[i] = PanelSeg.loadPanelSegResult(autoXMLPaths.get(i));
 		}
 	}
 	
-	ArrayList<ArrayList<PanelSegInfo>> LoadPanelSegGt() throws Exception
+	void LoadPanelSegGt() throws Exception
 	{
-		ArrayList<String> allXMLPaths = new ArrayList<String>();
+		gtXMLPaths = new ArrayList<String>();
 		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(this.srcFolder)) 
 		{			
 			for (Path path : dirStrm)
 			{
 				String filename = path.toString();
 				if (!filename.endsWith(".xml")) continue;
-				allXMLPaths.add(filename);
+				gtXMLPaths.add(filename);
 			}
 		}
 		catch (IOException e) 
@@ -109,13 +114,17 @@ public class PanelSegEval
 			e.printStackTrace();
 		}
 		
-		ArrayList<ArrayList<PanelSegInfo>> gtPanels = new ArrayList<ArrayList<PanelSegInfo>>();		
-		for (int i = 0; i < allXMLPaths.size(); i++)
+		gtPanels = new ArrayList<ArrayList<PanelSegInfo>>();		
+		for (int i = 0; i < gtXMLPaths.size(); i++)
 		{
-			ArrayList<PanelSegInfo> panels = PanelSeg.LoadPanelSegGt(allXMLPaths.get(i));
+			ArrayList<PanelSegInfo> panels = PanelSeg.LoadPanelSegGt(gtXMLPaths.get(i));
 			gtPanels.add(panels);
 		}
-		return gtPanels;
+	}
+	
+	void Evaluate()
+	{
+		
 	}
 	
 	/**
@@ -234,9 +243,9 @@ public class PanelSegEval
 		eval.segMultiThreads(10);
 		
 		//Do Evaluation
-		//eval.LoadPanelSegGt();
-		//eval.loadPanelSegResult();
-		
+		eval.LoadPanelSegGt();
+		eval.loadPanelSegResult();
+		eval.Evaluate();
 	}
 	
 }

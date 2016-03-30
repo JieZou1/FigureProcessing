@@ -141,6 +141,7 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 		}
 		
 		//TODO: merge all segmentationResultIndividualLabel to one set of label result and save to segmentationResult
+		MergeDetectedLabelsSimple();
 	}
 	
 	private ArrayList<PanelSegInfo> DetectMultiScale(Mat img, double maxSize, double minSize, char panelLabel, Boolean inverted)
@@ -173,6 +174,24 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 			candidates.add(segInfo);
 		}
 		return candidates;
+	}
+	
+	/**
+	 * The simplest method to merge label detection results saved in segmentationResultIndividualLabel to segmentationResult <p>
+	 * This method simply combine all detected results
+	 */
+	private void MergeDetectedLabelsSimple() 
+	{
+		figure.segmentationResult = new ArrayList<PanelSegInfo>(); //Reset
+		if (figure.segmentationResultIndividualLabel == null) return;
+		
+		for (int i = 0; i < figure.segmentationResultIndividualLabel.size(); i++)
+		{
+			ArrayList<PanelSegInfo> result = figure.segmentationResultIndividualLabel.get(i);
+			if (result == null) continue;
+			for (int j = 0; j < result.size(); j++)
+				figure.segmentationResult.add(result.get(j));
+		}
 	}
 	
 	/**
