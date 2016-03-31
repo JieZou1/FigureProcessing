@@ -27,16 +27,16 @@ import com.thoughtworks.xstream.XStream;
 public class PanelSegEval 
 {
 	private Path srcFolder, rstFolder;
-	ArrayList<Path> allPaths;
-	ArrayList<PanelSeg> segmentors;
-	XStream xStream;
+	private ArrayList<Path> allPaths;
+	private ArrayList<PanelSeg> segmentors;
+	private XStream xStream;
 
-	long startTime, endTime;
+	private long startTime, endTime;
 	
-	ArrayList<String> autoXMLPaths; ArrayList<ArrayList<PanelSegInfo>> autoPanels; //Automatic segmentation files and results
-	ArrayList<String> gtXMLPaths; ArrayList<ArrayList<PanelSegInfo>> gtPanels; //Ground truth data
-	ArrayList<String> matchedIDs; ArrayList<ArrayList<PanelSegInfo>> matchedAutoPanels; ArrayList<ArrayList<PanelSegInfo>> matchedGtPanels; //Matched set
-	Path  evaluationFile;
+	private ArrayList<String> autoXMLPaths; ArrayList<ArrayList<PanelSegInfo>> autoPanels; //Automatic segmentation files and results
+	private ArrayList<String> gtXMLPaths; ArrayList<ArrayList<PanelSegInfo>> gtPanels; //Ground truth data
+	private ArrayList<String> matchedIDs; ArrayList<ArrayList<PanelSegInfo>> matchedAutoPanels; ArrayList<ArrayList<PanelSegInfo>> matchedGtPanels; //Matched set
+	private Path  evaluationFile;
 	
 	/**
 	 * Prepare the Panel Segmentation evaluation. 
@@ -144,12 +144,18 @@ public class PanelSegEval
 	 * So, we need to search gtXMLPaths and autoXMLPaths to match. 
 	 * The matched results are saved in matchedIDs, matchedAutoPanels, and matchedGtPanels. 
 	 * The comparison is actually conducted in matchedAutoPanels and matchedGtPanels.
+	 * @throws Exception 
 	 */
-	void Evaluate()
+	void Evaluate() throws Exception
 	{
+		//Load Ground Truth and Auto Segmentation results from XML files in srcFolder and rstFolder
+		LoadPanelSegGt();
+		loadPanelSegResult();
+		
+		//Match auto and ground truth image samples (ID's, bascailly their filenames)
 		matchAutoGt();
 
-		//Evaluate
+		//Evaluate, save the result to evaluationFile
 		EvaluateLabelRecog();
 	}
 	
@@ -415,8 +421,6 @@ public class PanelSegEval
 		eval.saveResults();
 		
 		System.out.println("Save evaluation result ... ");
-		eval.LoadPanelSegGt();
-		eval.loadPanelSegResult();
 		eval.Evaluate();
 		
 		System.out.println("DONE!");
