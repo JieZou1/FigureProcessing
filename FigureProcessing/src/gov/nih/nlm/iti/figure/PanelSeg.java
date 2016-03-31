@@ -12,6 +12,7 @@ import static org.bytedeco.javacpp.opencv_imgproc.rectangle;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -37,7 +38,15 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 {
 	static char[] labelArray = { 'a','A','b','B','c','d','D','e','E','f','F','g','G','h','H','i','I','j','J','k','l','L','M','N','o','p','Q','R'};	//all possible panel labels
 	static int[] labelMinSizes = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10};	//The minimum side length of panel labels
-	static int[] labelMaxSizes = {70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70};	//The maximum side length of panel labels 
+	static int[] labelMaxSizes = {70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70};	//The maximum side length of panel labels
+	static int getLabelArrayIndex(char ch)
+	{
+		for (int i = 0; i < labelArray.length; i++)
+		{
+			if (labelArray[i] == ch)				return i;
+		}
+		return -1;
+	}
 	
 	/**
 	 * Some common initialization functions for all extended panel segmentation algorithms, including: <p>
@@ -48,7 +57,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	 * Generally, the segment function of all extended classes should call this super class function 
 	 * @param image
 	 */
-	public void segment(Mat image) 
+ 	public void segment(Mat image) 
 	{
 		figure = new Figure(image);	//Construct a figure object for saving processing results
 		figure.imageGray = new Mat();		cvtColor(figure.image, figure.imageGray, CV_BGR2GRAY);
@@ -234,13 +243,13 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	 * @return
 	 * @throws Exception
 	 */
-	static PanelSegInfo[] loadPanelSegResult(String xml_file) throws Exception
+	static ArrayList<PanelSegInfo> loadPanelSegResult(String xml_file) throws Exception
 	{
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder builder = factory.newDocumentBuilder();
 		Document doc = builder.parse(xml_file);
 
-		NodeList panelNodes = doc.getElementsByTagName("gov.nih.nlm.iti.figure.PanelSegResult");
+		NodeList panelNodes = doc.getElementsByTagName("gov.nih.nlm.iti.figure.PanelSegInfo");
 		PanelSegInfo[] panels = new PanelSegInfo[panelNodes.getLength()];
 
 		for (int i = 0; i < panelNodes.getLength(); i++)
@@ -292,7 +301,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 			
 			panels[i] = panel;
 		}
-		return panels;
+		return new ArrayList<PanelSegInfo>(Arrays.asList(panels));
 	}
 	
 }

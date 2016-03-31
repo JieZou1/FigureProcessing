@@ -2,13 +2,16 @@ package gov.nih.nlm.iti.figure;
 
 import static org.bytedeco.javacpp.opencv_imgcodecs.imwrite;
 
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.stream.IntStream;
 
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.javacpp.opencv_core.Mat;
@@ -27,10 +30,13 @@ public class PanelSegEval
 	ArrayList<Path> allPaths;
 	ArrayList<PanelSeg> segmentors;
 	XStream xStream;
+
+	long startTime, endTime;
 	
-	ArrayList<String> autoXMLPaths; PanelSegInfo[][] autoPanels; //Automatic segmentation files and results
+	ArrayList<String> autoXMLPaths; ArrayList<ArrayList<PanelSegInfo>> autoPanels; //Automatic segmentation files and results
 	ArrayList<String> gtXMLPaths; ArrayList<ArrayList<PanelSegInfo>> gtPanels; //Ground truth data
-	
+	ArrayList<String> matchedIDs; ArrayList<ArrayList<PanelSegInfo>> matchedAutoPanels; ArrayList<ArrayList<PanelSegInfo>> matchedGtPanels; //Matched set
+	Path  evaluationFile;
 	
 	/**
 	 * Prepare the Panel Segmentation evaluation. 
@@ -40,7 +46,7 @@ public class PanelSegEval
 	 */
 	PanelSegEval(String method, Path srcFolder, Path rstFolder, Path evaluationFile) 
 	{
-		this.srcFolder = srcFolder;		this.rstFolder = rstFolder;
+		this.srcFolder = srcFolder;		this.rstFolder = rstFolder; this.evaluationFile = evaluationFile;
 
 		allPaths = new ArrayList<Path>();		segmentors = new ArrayList<PanelSeg>();
 		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(this.srcFolder)) 
@@ -71,6 +77,11 @@ public class PanelSegEval
 //		xStream.alias("Rectangle", Rectangle.class);		
 	}
 	
+	/**
+	 * Load Panel Segmentation results from rstFolder, and saved to autoPanels. 
+	 * All XML files where the segmentation results are loaded from is saved in autoXMLPaths.
+	 * @throws Exception
+	 */
 	void loadPanelSegResult() throws Exception
 	{
 		autoXMLPaths = new ArrayList<String>();
@@ -89,13 +100,18 @@ public class PanelSegEval
 			e.printStackTrace();
 		}
 		
-		autoPanels = new PanelSegInfo[autoXMLPaths.size()][];
+		autoPanels = new ArrayList<ArrayList<PanelSegInfo>>();
 		for (int i = 0; i < autoXMLPaths.size(); i++)
 		{
-			autoPanels[i] = PanelSeg.loadPanelSegResult(autoXMLPaths.get(i));
+			autoPanels.add(PanelSeg.loadPanelSegResult(autoXMLPaths.get(i)));
 		}
 	}
 	
+	/**
+	 * Load Segmentation ground truth from srcFolder, and saved to gtPanels. 
+	 * All XML files where the ground truth are loaded from is saved in gtXMLPaths.
+	 * @throws Exception
+	 */
 	void LoadPanelSegGt() throws Exception
 	{
 		gtXMLPaths = new ArrayList<String>();
@@ -122,9 +138,152 @@ public class PanelSegEval
 		}
 	}
 	
+	/**
+	 * Compare gtPanels and autoPanels to generate evaluation result and save to evaluationFile.
+	 * Notice that the number of gtPanels and autoPanels may not be the same, and may not be in the same order. 
+	 * So, we need to search gtXMLPaths and autoXMLPaths to match. 
+	 * The matched results are saved in matchedIDs, matchedAutoPanels, and matchedGtPanels. 
+	 * The comparison is actually conducted in matchedAutoPanels and matchedGtPanels.
+	 */
 	void Evaluate()
 	{
+		matchAutoGt();
+
+		//Evaluate
+		EvaluateLabelRecog();
+	}
+	
+	/**
+	 * Evaluate Panel Label Recognition. 
+	 * The precision and recall of Each individual Panel Label Character are calculated. 
+	 * The overall precision and recall are also calcuated. 
+	 * NOTE: it is case insensitive, i.e., 'A' and 'a' are merged as one entry of 'a'. 
+	 */
+	private void EvaluateLabelRecog()
+	{
+		char lastChar = Character.toLowerCase(PanelSeg.labelArray[PanelSeg.labelArray.length-1]), firstChar = Character.toLowerCase(PanelSeg.labelArray[0]);
+		int n = lastChar - firstChar + 1; 
+		int[] countIndividualLabelGT = new int[n];
+		int[] countIndividualLabelAuto = new int[n];
+		int[] countIndividualLabelCorrect = new int[n];
 		
+		for (int i = 0; i < matchedIDs.size(); i++)
+		{
+			ArrayList<PanelSegInfo> auto = matchedAutoPanels.get(i);
+			for (int j = 0; j < auto.size(); j++)
+			{
+				PanelSegInfo panel = auto.get(j);
+				int labelArrayIndex = Character.toLowerCase(panel.panelLabel.charAt(0)) - firstChar;
+				countIndividualLabelAuto[labelArrayIndex]++;
+			}
+
+			ArrayList<PanelSegInfo> gt = matchedGtPanels.get(i);
+			for (int j = 0; j < gt.size(); j++)
+			{
+				PanelSegInfo panel = gt.get(j);
+				int labelArrayIndex = Character.toLowerCase(panel.panelLabel.charAt(0)) - firstChar;
+				countIndividualLabelGT[labelArrayIndex]++;
+			}
+			
+			for (int j = 0; j < auto.size(); j++)
+			{
+				PanelSegInfo autoPanel = auto.get(j); boolean found = false;
+				for (int k = 0; k < gt.size(); k++)
+				{
+					PanelSegInfo gtPanel = gt.get(k);
+					if (gtPanel.panelLabel.toLowerCase().equals(autoPanel.panelLabel.toLowerCase()) && 
+							gtPanel.labelRect.intersects(autoPanel.labelRect))
+					{
+						found = true; break;
+					}
+				}
+				if (found)
+				{
+					int labelArrayIndex = Character.toLowerCase(autoPanel.panelLabel.charAt(0)) - firstChar;
+					countIndividualLabelCorrect[labelArrayIndex]++;
+				}
+			}
+		}
+		
+		int countTotalLabelsGT = IntStream.of(countIndividualLabelGT).sum();
+		int countTotalLabelsAuto = IntStream.of(countIndividualLabelAuto).sum();
+		int countTotalLabelsCorrect = IntStream.of(countIndividualLabelCorrect).sum();
+
+		try (PrintWriter pw = new PrintWriter(evaluationFile.toString()))
+    	{
+			float precision, recall; int countGT, countAuto, countCorrect; String item;
+			
+    		pw.println("Total images processed: " + allPaths.size());
+    		pw.println("Total processing time: " + (endTime - startTime)/1000.0 + " secondes.");
+    		pw.println("Average processing time: " + ((endTime - startTime)/1000.0)/allPaths.size() + " secondes.");
+
+    		pw.println();
+    		pw.println("Item\tGT\tAuto\tCorrect\tPrecision\tRecall");
+    		
+    		item = "Total";
+    		countGT = countTotalLabelsGT; countAuto = countTotalLabelsAuto; countCorrect = countTotalLabelsCorrect;
+    		precision = (float)countCorrect / countAuto; precision = (float) (((int)(precision*1000+0.5))/10.0);
+    		recall = (float)countCorrect / countGT; recall = (float) (((int)(recall*1000+0.5))/10.0);
+    		pw.println(item + "\t" + countGT + "\t" + countAuto + "\t" + countCorrect + "\t" + precision + "\t" + recall);
+    		
+    		pw.println();
+
+    		for (int i = 0; i < countIndividualLabelGT.length; i++)
+    		{
+    			item = "" + (char)(PanelSeg.labelArray[0] + i);
+        		countGT = countIndividualLabelGT[i]; countAuto = countIndividualLabelAuto[i]; countCorrect = countIndividualLabelCorrect[i];
+        		precision = (float)countCorrect / countAuto; precision = (float) (((int)(precision*1000+0.5))/10.0);
+        		recall = (float)countCorrect / countGT; recall = (float) (((int)(recall*1000+0.5))/10.0);
+        		pw.println(item + "\t" + countGT + "\t" + countAuto + "\t" + countCorrect + "\t" + precision + "\t" + recall);
+    		}
+    		
+    	} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
+	
+	/**
+	 * Match have auto segmentation and gt segmentation pairs. 
+	 * Results are save in matchedIDs, matchedAutoPanels, and matchedGtPanels.
+	 */
+	private void matchAutoGt() 
+	{
+		//keep only filenames from autoXMLPaths and gtXMLPaths
+		for (int i = 0; i < autoXMLPaths.size(); i++)
+		{
+			String path = autoXMLPaths.get(i);
+			int start = path.lastIndexOf('\\') + 1, end = path.lastIndexOf(".xml");
+			String filename = path.substring(start, end);
+			autoXMLPaths.set(i, filename);
+		}
+		for (int i = 0; i < gtXMLPaths.size(); i++)
+		{
+			String path = gtXMLPaths.get(i);
+			int start = path.lastIndexOf('\\') + 1, end = path.lastIndexOf("_data.xml");
+			String filename = path.substring(start, end);
+			gtXMLPaths.set(i, filename);
+		}
+		//Match gtXMLPaths and autoXMLPaths
+		matchedIDs = new ArrayList<>();
+		matchedAutoPanels = new ArrayList<ArrayList<PanelSegInfo>>();
+		matchedGtPanels = new ArrayList<ArrayList<PanelSegInfo>>();
+		
+		for (int i = 0; i < autoXMLPaths.size(); i++)
+		{
+			String autoID = autoXMLPaths.get(i); int index = -1;
+			for (int j = 0; j < gtXMLPaths.size(); j++)
+			{
+				String gtID = gtXMLPaths.get(j);
+				if (autoID.equals(gtID)) {index = j; break;}
+			}
+			if (index >= 0)
+			{
+				matchedIDs.add(autoID);
+				matchedAutoPanels.add(autoPanels.get(i));
+				matchedGtPanels.add(gtPanels.get(index));
+			}
+		}		
 	}
 	
 	/**
@@ -135,28 +294,35 @@ public class PanelSegEval
 	{
 		Path path = allPaths.get(i);		PanelSeg segmentor = segmentors.get(i);
 		
-		// 1. Do Segmentation
 		String filename = path.toString();
 		System.out.println("Processing "+ filename);
 		segmentor.segment(filename);
-
-		// 2.1 Save result in images
-		Mat img_result = segmentor.getSegmentationResultInMat();
-		String img_file = rstFolder.resolve(path.getFileName()).toString();
-		imwrite(img_file, img_result);
-		
-		// 2.2 Save result in xml files
-		ArrayList<PanelSegInfo> xml_result = segmentor.getSegmentationResult();
-		String xml = xStream.toXML(xml_result);
-		String xml_file = rstFolder.resolve(path.getFileName()).toString().replace(".jpg", ".xml");
-		try (FileWriter fw = new FileWriter(xml_file))
+	}
+	
+	private void saveResults() 
+	{
+		for (int i = 0; i < allPaths.size(); i++)
 		{
-			fw.write(xml);
-		}
-		catch (IOException e) 
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Path path = allPaths.get(i);		PanelSeg segmentor = segmentors.get(i);
+			
+			// 2.1 Save result in images
+			Mat img_result = segmentor.getSegmentationResultInMat();
+			String img_file = rstFolder.resolve(path.getFileName()).toString();
+			imwrite(img_file, img_result);
+			
+			// 2.2 Save result in xml files
+			ArrayList<PanelSegInfo> xml_result = segmentor.getSegmentationResult();
+			String xml = xStream.toXML(xml_result);
+			String xml_file = rstFolder.resolve(path.getFileName()).toString().replace(".jpg", ".xml");
+			try (FileWriter fw = new FileWriter(xml_file))
+			{
+				fw.write(xml);
+			}
+			catch (IOException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -224,6 +390,8 @@ public class PanelSegEval
 
 		if (Files.exists(rst_path))	FileUtils.cleanDirectory(rst_path.toFile());
 		else						Files.createDirectory(rst_path);
+
+		System.out.println("Initialize ... ");
 		
 		String method = args[0];
 		switch (method) 
@@ -232,20 +400,26 @@ public class PanelSegEval
 		case "Santosh": break;
 		case "LabelRegMSER": break;
 		case "LabelRegHoG": break;
-		default:
-			System.out.println(method + " is not known.");
-			return;
+		default: System.out.println(method + " is not known.");	return;
 		}
 		
-		//Do segmentation
 		PanelSegEval eval = new PanelSegEval(method, src_path, rst_path, evaluation_file);
+
+		System.out.println("Start Segmentation ... ");
+		eval.startTime = System.currentTimeMillis();
 		//eval.segSingleThread();
 		eval.segMultiThreads(10);
+		eval.endTime = System.currentTimeMillis();
+
+		System.out.println("Save segmentation results ... ");
+		eval.saveResults();
 		
-		//Do Evaluation
+		System.out.println("Save evaluation result ... ");
 		eval.LoadPanelSegGt();
 		eval.loadPanelSegResult();
 		eval.Evaluate();
+		
+		System.out.println("DONE!");
 	}
 	
 }

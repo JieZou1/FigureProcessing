@@ -14,11 +14,11 @@ import org.bytedeco.javacpp.opencv_objdetect.HOGDescriptor;
 public final class PanelSegLabelRegHoG extends PanelSeg 
 {
 //    static private Size winSize_64 = new Size(64, 64);
-//    static private Size winSize_32 = new Size(32, 32);
-//    static private Size blockSize = new Size(16, 16);
-//    static private Size blockStride = new Size(8, 8);
-//    static private Size cellSize = new Size(8, 8);
-//    static private int nbins = 9;
+    static private Size winSize_32 = new Size(32, 32);
+    static private Size blockSize = new Size(16, 16);
+    static private Size blockStride = new Size(8, 8);
+    static private Size cellSize = new Size(8, 8);
+    static private int nbins = 9;
 //    static private Size winStride = new Size(8, 8);
 //    static private Size trainPadding = new Size(0, 0);
 //    static private int derivAperture = 1;
@@ -47,11 +47,11 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 			}
 		}
 		
-	    Size winSize_32 = new Size(32, 32);
-	    Size blockSize = new Size(16, 16);
-	    Size blockStride = new Size(8, 8);
-	    Size cellSize = new Size(8, 8);
-	    int nbins = 9;
+//	    Size winSize_32 = new Size(32, 32);
+//	    Size blockSize = new Size(16, 16);
+//	    Size blockStride = new Size(8, 8);
+//	    Size cellSize = new Size(8, 8);
+//	    int nbins = 9;
 	    
 		hog = new HOGDescriptor(winSize_32, blockSize, blockStride, cellSize, nbins);
 		//hog = new HOGDescriptor(winSize_32, blockSize, blockStride, cellSize, nbins, derivAperture, winSigma, _histogramNormType, _L2HysThreshold, gammaCorrection, nlevels, _signedGradient)
