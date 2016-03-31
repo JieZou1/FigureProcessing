@@ -13,20 +13,27 @@ import org.bytedeco.javacpp.opencv_objdetect.HOGDescriptor;
 
 public final class PanelSegLabelRegHoG extends PanelSeg 
 {
+	//The HoG parameters used in both training and testing
 //    static private Size winSize_64 = new Size(64, 64);
-    static private Size winSize_32 = new Size(32, 32);
+    static private Size winSize_32 = new Size(32, 32); //The size of the training label patches
     static private Size blockSize = new Size(16, 16);
     static private Size blockStride = new Size(8, 8);
     static private Size cellSize = new Size(8, 8);
     static private int nbins = 9;
-//    static private Size winStride = new Size(8, 8);
-//    static private Size trainPadding = new Size(0, 0);
-//    static private int derivAperture = 1;
-//    static private double winSigma = -1;
-//    static private double L2HysThreshold = 0.2;
-//    static private boolean gammaCorrection = true;
-//    static private int nLevels = 64;
+//  static private int derivAperture = 1;
+//  static private double winSigma = -1;
+//  static private double L2HysThreshold = 0.2;
+//  static private boolean gammaCorrection = true;
+//  static private int nLevels = 64;
 	
+    //The HoG parameters used in testing only.
+    static private double hitThreshold = 0;			//Threshold for the distance between features and SVM classifying plane.
+    static private Size winStride = new Size(8, 8); //Sliding window step, It must be a multiple of block stride
+    static private Size padding = new Size(0, 0);	//Adds a certain amount of extra pixels on each side of the input image
+    static private double scale0 = 1.05;			//Coefficient of the detection window increase
+    static private int groupThreshold = 2;
+    static private boolean useMeanShiftGrouping = false;
+    
 	private HOGDescriptor hog;
 	private float[][] svmModels;
 	
@@ -47,12 +54,6 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 			}
 		}
 		
-//	    Size winSize_32 = new Size(32, 32);
-//	    Size blockSize = new Size(16, 16);
-//	    Size blockStride = new Size(8, 8);
-//	    Size cellSize = new Size(8, 8);
-//	    int nbins = 9;
-	    
 		hog = new HOGDescriptor(winSize_32, blockSize, blockStride, cellSize, nbins);
 		//hog = new HOGDescriptor(winSize_32, blockSize, blockStride, cellSize, nbins, derivAperture, winSigma, _histogramNormType, _L2HysThreshold, gammaCorrection, nlevels, _signedGradient)
 	}
@@ -149,7 +150,8 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 		ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
 		
 		RectVector rectVector = new RectVector();			DoublePointer dp = new DoublePointer();	
-		hog.detectMultiScale(img, rectVector, dp);
+		//hog.detectMultiScale(img, rectVector, dp);
+		hog.detectMultiScale(img, rectVector, dp, hitThreshold, winStride, padding, scale0, groupThreshold, useMeanShiftGrouping);
 		
 		if (rectVector == null || rectVector.size() == 0) return null;
 		
@@ -201,10 +203,9 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 	 */
 	public float[] featureExtraction(Mat grayPatch) 
 	{
-        //Size winStride = new Size(8, 8);        Size trainPadding = new Size(0, 0);
 		FloatPointer descriptors = new FloatPointer();		
 		hog.compute(grayPatch, descriptors);
-		//hog.compute(grayPatch, descriptors, winStride, trainPadding, null);
+		//hog.compute(grayPatch, descriptors, winStride, padding, null);
 		
 		int n = (int)hog.getDescriptorSize();
 		float[] features = new float[n];		descriptors.get(features);

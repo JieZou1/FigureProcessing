@@ -179,7 +179,8 @@ public class PanelSegEval
 			for (int j = 0; j < auto.size(); j++)
 			{
 				PanelSegInfo panel = auto.get(j);
-				int labelArrayIndex = Character.toLowerCase(panel.panelLabel.charAt(0)) - firstChar;
+				char ch = Character.toLowerCase(panel.panelLabel.charAt(0));			if (ch > lastChar) continue;
+				int labelArrayIndex = ch - firstChar;
 				countIndividualLabelAuto[labelArrayIndex]++;
 			}
 
@@ -187,25 +188,27 @@ public class PanelSegEval
 			for (int j = 0; j < gt.size(); j++)
 			{
 				PanelSegInfo panel = gt.get(j);
-				int labelArrayIndex = Character.toLowerCase(panel.panelLabel.charAt(0)) - firstChar;
+				char ch = Character.toLowerCase(panel.panelLabel.charAt(0));			if (ch > lastChar) continue;
+				int labelArrayIndex = ch - firstChar;
 				countIndividualLabelGT[labelArrayIndex]++;
 			}
 			
 			for (int j = 0; j < auto.size(); j++)
 			{
 				PanelSegInfo autoPanel = auto.get(j); boolean found = false;
+				char chAuto = Character.toLowerCase(autoPanel.panelLabel.charAt(0));
 				for (int k = 0; k < gt.size(); k++)
 				{
 					PanelSegInfo gtPanel = gt.get(k);
-					if (gtPanel.panelLabel.toLowerCase().equals(autoPanel.panelLabel.toLowerCase()) && 
-							gtPanel.labelRect.intersects(autoPanel.labelRect))
+					char chGt = Character.toLowerCase(gtPanel.panelLabel.charAt(0));	//if (chGt > lastChar) continue;
+					if (chAuto == chGt && gtPanel.labelRect.intersects(autoPanel.labelRect))
 					{
 						found = true; break;
 					}
 				}
 				if (found)
 				{
-					int labelArrayIndex = Character.toLowerCase(autoPanel.panelLabel.charAt(0)) - firstChar;
+					int labelArrayIndex = chAuto - firstChar;
 					countIndividualLabelCorrect[labelArrayIndex]++;
 				}
 			}
