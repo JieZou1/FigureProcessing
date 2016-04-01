@@ -1,5 +1,6 @@
 package gov.nih.nlm.iti.figure;
 
+import java.io.IOException;
 import java.util.concurrent.RecursiveAction;
 
 /**
@@ -30,7 +31,12 @@ class PanelSegEvalTask extends RecursiveAction
 		{
 			for (int i = start; i < end; i++)
 			{
-				segEval.segment(i);
+				try {
+					segEval.segment(i);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 		}
 		else

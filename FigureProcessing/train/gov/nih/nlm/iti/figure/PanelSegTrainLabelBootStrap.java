@@ -72,9 +72,8 @@ final class PanelSegTrainLabelBootStrap extends PanelSegTrainMethod
 				PanelSegInfo segInfo = segmentationResult.get(j);
 				Rectangle rectangle = segInfo.labelRect;
 				
-				Mat patch = segInfo.labelInverted ? Algorithm.CropImage(hog.figure.imageGrayInverted, rectangle) : 
-					Algorithm.CropImage(hog.figure.imageGray, rectangle);
-				resize(patch, patch, new Size(32, 32)); //Resize to 32x32 for easy browsing the results
+				Mat patch = segInfo.labelInverted ? Algorithm.CropImage(hog.figure.imageGrayInverted, rectangle) : 	Algorithm.CropImage(hog.figure.imageGray, rectangle);
+				resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
 				
 				//Construct filename
 				Path resultPatchFolder = Character.isUpperCase(PanelSeg.labelArray[i])? resultFolder.resolve(segInfo.panelLabel + "_") : resultFolder.resolve(segInfo.panelLabel);	
@@ -82,7 +81,7 @@ final class PanelSegTrainLabelBootStrap extends PanelSegTrainMethod
 				String resultFilename = imageFilePath.getFileName().toString();
 				int pos = resultFilename.lastIndexOf('.');
 				
-				resultFilename = resultFilename.substring(0, pos) + "." + rectangle.toString() + segInfo.labelInverted + ".bmp";
+				resultFilename = resultFilename.substring(0, pos) + "." + rectangle.toString() + "." + segInfo.labelInverted + ".bmp";
 				Path resultPatchFile = resultPatchFolder.resolve(resultFilename);
 				imwrite(resultPatchFile.toString(), patch);
 			}

@@ -4,6 +4,7 @@ import static org.bytedeco.javacpp.opencv_core.subtract;
 import static org.bytedeco.javacpp.opencv_imgcodecs.*;
 import static org.bytedeco.javacpp.opencv_imgproc.*;
 
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -64,16 +65,17 @@ final class PanelSegTrainLabelNeg extends PanelSegTrainMethod
 			int x, y, w, h;
 			x = ThreadLocalRandom.current().nextInt(0, image.cols());
 			y = ThreadLocalRandom.current().nextInt(0, image.rows());
-			w = h = ThreadLocalRandom.current().nextInt(10, 80);
+			w = h = ThreadLocalRandom.current().nextInt(10, 90);
 			
 			if (x + w <= image.cols() && y + h <= image.rows())
 			{
 				Mat patch = imageGray.apply(new Rect(x, y, w, h));
+				resize(patch, patch, new Size(64, 64));
 
 				//Construct filename
 				String resultFilename = imageFilePath.getFileName().toString();
 				int pos = resultFilename.lastIndexOf('.');
-				resultFilename = resultFilename.substring(0, pos) + ".p.bmp";
+				resultFilename = resultFilename.substring(0, pos) + "." + (new Rectangle(x, y, w, h)).toString() + ".false.bmp";
 				Path resultPatchFile = resultFolder.resolve(resultFilename);
 				imwrite(resultPatchFile.toString(), patch);
 			}
@@ -83,16 +85,17 @@ final class PanelSegTrainLabelNeg extends PanelSegTrainMethod
 			int x, y, w, h;
 			x = ThreadLocalRandom.current().nextInt(0, image.cols());
 			y = ThreadLocalRandom.current().nextInt(0, image.rows());
-			w = h = ThreadLocalRandom.current().nextInt(10, 80);
+			w = h = ThreadLocalRandom.current().nextInt(10, 90);
 
 			if (x + w <= image.cols() && y + h <= image.rows())
 			{
 				Mat patch = imageGrayInverted.apply(new Rect(x, y, w, h));
+				resize(patch, patch, new Size(64, 64));
 
 				//Construct filename
 				String resultFilename = imageFilePath.getFileName().toString();
 				int pos = resultFilename.lastIndexOf('.');
-				resultFilename = resultFilename.substring(0, pos) + ".n.bmp";
+				resultFilename = resultFilename.substring(0, pos) + "." + (new Rectangle(x, y, w, h)).toString() + ".true.bmp";
 				Path resultPatchFile = resultFolder.resolve(resultFilename);
 				imwrite(resultPatchFile.toString(), patch);
 			}

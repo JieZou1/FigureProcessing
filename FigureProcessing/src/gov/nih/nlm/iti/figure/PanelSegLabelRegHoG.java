@@ -67,7 +67,9 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 	{
 		super.segment(image);
 
+		int n = PanelSeg.labelArray.length;
 		figure.segmentationResultIndividualLabel = new ArrayList<ArrayList<PanelSegInfo>>();
+		for (int i = 0; i < n; i++) figure.segmentationResultIndividualLabel.add(null);
 		
 		//Resize the image. We assume the smallest label patch is 12x12.
         double scale = 64.0 / 12.0; //check statistics.txt to decide this scaling factor.
@@ -78,7 +80,6 @@ public final class PanelSegLabelRegHoG extends PanelSeg
         Mat imgeScaledInverted = new Mat(); resize(figure.imageGrayInverted, imgeScaledInverted, newSize);
 		//Mat imgeScaledInverted = subtract(Scalar.all(255), imgScaled).asMat();
 		
-		int n = PanelSeg.labelArray.length;
 		//for (int i = 0; i < n; i++)
 		for (int i = 4; i <= 4; i++)
 		{
@@ -137,9 +138,8 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 		            segInfo.labelRect = orig_rect;
 		            segmentationResult.add(segInfo);
 				}
-				figure.segmentationResultIndividualLabel.add(segmentationResult);
+				figure.segmentationResultIndividualLabel.set(i, segmentationResult);
 			}
-			else figure.segmentationResultIndividualLabel.add(null);
 		}
 		
 		//TODO: merge all segmentationResultIndividualLabel to one set of label result and save to segmentationResult

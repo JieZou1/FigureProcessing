@@ -1,7 +1,9 @@
 package gov.nih.nlm.iti.figure;
 
 import static org.bytedeco.javacpp.opencv_imgcodecs.imwrite;
+import static org.bytedeco.javacpp.opencv_imgproc.resize;
 
+import java.awt.Rectangle;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,6 +17,7 @@ import java.util.stream.IntStream;
 
 import org.apache.commons.io.FileUtils;
 import org.bytedeco.javacpp.opencv_core.Mat;
+import org.bytedeco.javacpp.opencv_core.Size;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -201,7 +204,11 @@ public class PanelSegEval
 				{
 					PanelSegInfo gtPanel = gt.get(k);
 					char chGt = Character.toLowerCase(gtPanel.panelLabel.charAt(0));	//if (chGt > lastChar) continue;
-					if (chAuto == chGt && gtPanel.labelRect.intersects(autoPanel.labelRect))
+					Rectangle intersect = gtPanel.labelRect.intersection(autoPanel.labelRect);
+					double area_intersect = intersect.width * intersect.height;
+					double area_gt = gtPanel.labelRect.width * gtPanel.labelRect.height;
+					double area_auto = autoPanel.labelRect.width * autoPanel.labelRect.height;
+					if (chAuto == chGt && area_intersect > area_gt / 2 && area_intersect > area_auto / 2)  //Label matches and also the intersection to gt is at least half of gt region and half of itself.
 					{
 						found = true; break;
 					}
@@ -298,14 +305,44 @@ public class PanelSegEval
 	/**
 	 * Panel Segmentation for a figure
 	 * @param path The figure file to be segmented.
+	 * @throws IOException 
 	 */
-	void segment(int i) 
+	void segment(int i) throws IOException 
 	{
 		Path path = allPaths.get(i);		PanelSeg segmentor = segmentors.get(i);
 		
 		String filename = path.toString();
 		System.out.println("Processing "+ i + " "  + filename);
 		segmentor.segment(filename);
+	
+		//Save detected patches
+		for (int k = 0; k < segmentor.figure.segmentationResultIndividualLabel.size(); k++)
+		{
+			ArrayList<PanelSegInfo> segmentationResult = segmentor.figure.segmentationResultIndividualLabel.get(k);
+			if (segmentationResult == null) continue;
+			
+			for (int j = 0; j < segmentationResult.size(); j++)
+			{
+				if (j == 2) break; //We just save the top patches for training, in order to avoiding collecting a very large training set at the beginning.
+				
+				PanelSegInfo segInfo = segmentationResult.get(j);
+				Rectangle rectangle = segInfo.labelRect;
+				
+				Mat patch = segInfo.labelInverted ? Algorithm.CropImage(segmentor.figure.imageGrayInverted, rectangle) : 
+					Algorithm.CropImage(segmentor.figure.imageGray, rectangle);
+				resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
+				
+				//Construct filename
+				Path resultPatchFolder = Character.isUpperCase(PanelSeg.labelArray[k])? rstFolder.resolve(segInfo.panelLabel + "_") : rstFolder.resolve(segInfo.panelLabel);	
+				if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
+				String resultFilename = path.getFileName().toString();
+				int pos = resultFilename.lastIndexOf('.');
+				
+				resultFilename = resultFilename.substring(0, pos) + "." + rectangle.toString() + "." + segInfo.labelInverted + ".bmp";
+				Path resultPatchFile = resultPatchFolder.resolve(resultFilename);
+				imwrite(resultPatchFile.toString(), patch);
+			}
+		}
 	}
 	
 	private void saveResults() 
@@ -353,8 +390,9 @@ public class PanelSegEval
 	/**
 	 * Do segmentation in a single thread.  Not very useful.
 	 * Use large seqThreshold value, in segMultiThreads, can accomplish segSingleThread
+	 * @throws IOException 
 	 */
-	public void segSingleThread() 
+	public void segSingleThread() throws IOException 
 	{		
 		for (int i = 0; i < allPaths.size(); i++)
 		//for (int i = 0; i < 1; i++)
