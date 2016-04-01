@@ -304,7 +304,7 @@ public class PanelSegEval
 		Path path = allPaths.get(i);		PanelSeg segmentor = segmentors.get(i);
 		
 		String filename = path.toString();
-		System.out.println("Processing "+ filename);
+		System.out.println("Processing "+ i + " "  + filename);
 		segmentor.segment(filename);
 	}
 	

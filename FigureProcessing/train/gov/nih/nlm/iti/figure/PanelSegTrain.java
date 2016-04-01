@@ -154,8 +154,8 @@ class PanelSegTrain
 		}
 		
 		//Do Training
-		//train.trainSingleThread();
-		train.trainMultiThreads(10);
+		train.trainSingleThread();
+		//train.trainMultiThreads(10);
 		
 	}	
 

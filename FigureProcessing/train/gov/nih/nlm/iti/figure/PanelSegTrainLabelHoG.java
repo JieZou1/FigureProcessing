@@ -101,8 +101,8 @@ final class PanelSegTrainLabelHoG extends PanelSegTrainMethod
 		PanelSegLabelRegHoG hog = new PanelSegLabelRegHoG();
 		
 		Mat grayPatch = imread(imageFilePath.toString(), CV_LOAD_IMAGE_GRAYSCALE);
-		if (grayPatch.cols() != 32 || grayPatch.rows() != 32)
-			resize(grayPatch, grayPatch, new Size(32, 32));
+		if (grayPatch.cols() != 64 || grayPatch.rows() != 64)
+			resize(grayPatch, grayPatch, new Size(64, 64));
 		feature = hog.featureExtraction(grayPatch);
 	}
 	

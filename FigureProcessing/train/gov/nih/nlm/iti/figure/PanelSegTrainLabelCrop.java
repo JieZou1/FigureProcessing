@@ -75,11 +75,11 @@ final class PanelSegTrainLabelCrop extends PanelSegTrainMethod
 			PanelSegInfo panel = gtSegmentation.get(i);
 			if (panel.panelLabel.length() > 1) continue; //We recognize single-char label only at this time.
 
-			{	//Crop the label patch, find the tightest boundingbox and then extend in each direction 10%.
+			{	//Crop the label patch, find the tightest bounding box and then extend in each direction 10%.
 				Mat patch 			= cropPatch(imageGray, panel.labelRect);
 				Mat patchInverted 	= cropPatch(imageGrayInverted, panel.labelRect);
 				
-				{	//Construct filename to save the extened patch
+				{	//Construct filename to save the extended patch
 					Path resultPatchFolder = resultFolder.resolve("ExtendPatch");	if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
 					resultPatchFolder = resultPatchFolder.resolve(panel.panelLabel); if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
 					String resultFilename = imageFilePath.getFileName().toString();
@@ -95,12 +95,12 @@ final class PanelSegTrainLabelCrop extends PanelSegTrainMethod
 					
 				}
 				
-				//Normalize the patch to 32x32
-		        Mat patchNormalized = new Mat();	resize(patch, patchNormalized, new Size(32, 32));
-		        Mat patchInvertedNormalized = new Mat();	resize(patchInverted, patchInvertedNormalized, new Size(32, 32));
+				//Normalize the patch to 64x64
+		        Mat patchNormalized = new Mat();	resize(patch, patchNormalized, new Size(64, 64));
+		        Mat patchInvertedNormalized = new Mat();	resize(patchInverted, patchInvertedNormalized, new Size(64, 64));
 
-		        {	//Construct filename to save 32x32 patches
-					Path resultPatchFolder = resultFolder.resolve("32x32");	if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
+		        {	//Construct filename to save 64x64 patches
+					Path resultPatchFolder = resultFolder.resolve("64x64");	if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
 					resultPatchFolder = resultPatchFolder.resolve(panel.panelLabel); if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
 					String resultFilename = imageFilePath.getFileName().toString();
 					int pos = resultFilename.lastIndexOf('.');

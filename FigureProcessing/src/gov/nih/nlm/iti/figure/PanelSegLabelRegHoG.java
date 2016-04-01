@@ -14,8 +14,8 @@ import org.bytedeco.javacpp.opencv_objdetect.HOGDescriptor;
 public final class PanelSegLabelRegHoG extends PanelSeg 
 {
 	//The HoG parameters used in both training and testing
-//    static private Size winSize_64 = new Size(64, 64);
-    static private Size winSize_32 = new Size(32, 32); //The size of the training label patches
+    static private Size winSize_64 = new Size(64, 64);
+//    static private Size winSize_32 = new Size(32, 32); //The size of the training label patches
     static private Size blockSize = new Size(16, 16);
     static private Size blockStride = new Size(8, 8);
     static private Size cellSize = new Size(8, 8);
@@ -30,7 +30,7 @@ public final class PanelSegLabelRegHoG extends PanelSeg
     static private double hitThreshold = 0;			//Threshold for the distance between features and SVM classifying plane.
     static private Size winStride = new Size(8, 8); //Sliding window step, It must be a multiple of block stride
     static private Size padding = new Size(0, 0);	//Adds a certain amount of extra pixels on each side of the input image
-    static private double scale0 = 1.05;			//Coefficient of the detection window increase
+    static private double scale0 = 1.01;			//Coefficient of the detection window increase
     static private int groupThreshold = 2;
     static private boolean useMeanShiftGrouping = false;
     
@@ -54,7 +54,7 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 			}
 		}
 		
-		hog = new HOGDescriptor(winSize_32, blockSize, blockStride, cellSize, nbins);
+		hog = new HOGDescriptor(winSize_64, blockSize, blockStride, cellSize, nbins);
 		//hog = new HOGDescriptor(winSize_32, blockSize, blockStride, cellSize, nbins, derivAperture, winSigma, _histogramNormType, _L2HysThreshold, gammaCorrection, nlevels, _signedGradient)
 	}
 	
@@ -69,8 +69,8 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 
 		figure.segmentationResultIndividualLabel = new ArrayList<ArrayList<PanelSegInfo>>();
 		
-		//Resize the image. We assume the smallest label patch is 10x10.
-        double scale = 32.0 / 10.0; //check statistics.txt to decide this scaling factor.
+		//Resize the image. We assume the smallest label patch is 12x12.
+        double scale = 64.0 / 12.0; //check statistics.txt to decide this scaling factor.
         int _width = (int)(image.cols() * scale + 0.5);
         int _height = (int)(image.rows() * scale + 0.5);
         Size newSize = new Size(_width, _height);
@@ -79,7 +79,8 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 		//Mat imgeScaledInverted = subtract(Scalar.all(255), imgScaled).asMat();
 		
 		int n = PanelSeg.labelArray.length;
-		for (int i = 0; i < n; i++)
+		//for (int i = 0; i < n; i++)
+		for (int i = 4; i <= 4; i++)
 		{
 			char panelLabel = labelArray[i];
 			float[] svmModel = svmModels[i];
