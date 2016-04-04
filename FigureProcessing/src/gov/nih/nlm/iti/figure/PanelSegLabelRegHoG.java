@@ -83,7 +83,7 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 		//Mat imgeScaledInverted = subtract(Scalar.all(255), imgScaled).asMat();
 		
 		//for (int i = 0; i < n; i++)
-		for (int i = 4; i <= 4; i++)
+		for (int i = 0; i <= 6; i++)
 		{
 			char panelLabel = labelArray[i];
 			float[] svmModel = svmModels[i];
