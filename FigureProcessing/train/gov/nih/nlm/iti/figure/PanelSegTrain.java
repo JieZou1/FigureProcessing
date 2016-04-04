@@ -51,7 +51,7 @@ class PanelSegTrain
 //				!filename.endsWith("1477-7827-6-16-5.jpg")	&&
 //				!filename.endsWith("1741-7007-7-28-6.jpg"))
 //			return;
-		System.out.println("Processing "+ filename);
+		System.out.println("Processing "+ i + " "  + filename);
 		method.Train(path, rstFolder);
 	}
 	

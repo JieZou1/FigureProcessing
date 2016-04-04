@@ -155,7 +155,7 @@ final class PanelSegTrainLabelCrop extends PanelSegTrainMethod
             int c = x + width / 2; x = c - width_new / 2; width = width_new;			
 		}
 		
-        //Expand 15% in each direction
+        //Expand 10% in each direction
         x -= (int)(width * 0.15 + 0.5); width = (int)(width * 1.3 + 0.5);
         y -= (int)(height * 0.15 + 0.5); height = (int)(height * 1.3 + 0.5);
         if (x < 0) { width += x; x = 0; }

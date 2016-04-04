@@ -205,7 +205,7 @@ public class PanelSegEval
 					PanelSegInfo gtPanel = gt.get(k);
 					char chGt = Character.toLowerCase(gtPanel.panelLabel.charAt(0));	//if (chGt > lastChar) continue;
 					Rectangle intersect = gtPanel.labelRect.intersection(autoPanel.labelRect);
-					double area_intersect = intersect.width * intersect.height;
+					double area_intersect = intersect.isEmpty() ? 0 : intersect.width * intersect.height;
 					double area_gt = gtPanel.labelRect.width * gtPanel.labelRect.height;
 					double area_auto = autoPanel.labelRect.width * autoPanel.labelRect.height;
 					if (chAuto == chGt && area_intersect > area_gt / 2 && area_intersect > area_auto / 2)  //Label matches and also the intersection to gt is at least half of gt region and half of itself.

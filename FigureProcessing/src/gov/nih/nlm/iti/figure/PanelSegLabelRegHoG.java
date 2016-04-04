@@ -30,9 +30,11 @@ public final class PanelSegLabelRegHoG extends PanelSeg
     static private double hitThreshold = 0;			//Threshold for the distance between features and SVM classifying plane.
     static private Size winStride = new Size(8, 8); //Sliding window step, It must be a multiple of block stride
     static private Size padding = new Size(0, 0);	//Adds a certain amount of extra pixels on each side of the input image
-    static private double scale0 = 1.01;			//Coefficient of the detection window increase
+    static private double scale0 = 1.05;			//Coefficient of the detection window increase
     static private int groupThreshold = 2;
     static private boolean useMeanShiftGrouping = false;
+    
+    static private double minimumLabelSize = 12.0;	//We assume the smallest label patch is 12x12.
     
 	private HOGDescriptor hog;
 	private float[][] svmModels;
@@ -71,8 +73,8 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 		figure.segmentationResultIndividualLabel = new ArrayList<ArrayList<PanelSegInfo>>();
 		for (int i = 0; i < n; i++) figure.segmentationResultIndividualLabel.add(null);
 		
-		//Resize the image. We assume the smallest label patch is 12x12.
-        double scale = 64.0 / 12.0; //check statistics.txt to decide this scaling factor.
+		//Resize the image. 
+        double scale = 64.0 / minimumLabelSize; //check statistics.txt to decide this scaling factor.
         int _width = (int)(image.cols() * scale + 0.5);
         int _height = (int)(image.rows() * scale + 0.5);
         Size newSize = new Size(_width, _height);
