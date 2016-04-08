@@ -21,6 +21,7 @@ class PanelSegTrain
 	ArrayList<PanelSegTrainMethod> methods;
 	
 	ArrayList<Boolean> flags; //Used for indicating training/test samples, ...
+	ArrayList<Integer> labels; //Used for indicating the class labels of the samples, ...
 	
 	/**
 	 * Prepare the Panel Segmentation training. 
@@ -67,13 +68,6 @@ class PanelSegTrain
 
 		PanelSegTrainTask task = new PanelSegTrainTask(this, 0, allPaths.size(), seqThreshold);
 		task.invoke();
-		
-		if (method.equals("LabelHoG")) 
-			PanelSegTrainLabelHoG.generateLabelPatchHoGTrain(flags, methods, rstFolder.resolve("train.txt").toString());
-		else if (method.equals("Svm2SingleVec"))
-			PanelSegTrainSvm2SingleVec.generateSingleVec(methods, "PanelSegLabelRegHoGModels.java");
-		
-		System.out.println("Processing Completed!");
 	}
 	
 	/**
@@ -88,11 +82,16 @@ class PanelSegTrain
 		{
 			train(i);
 		}
-		
+	}
+	
+	void Finalize()
+	{
 		if (method.equals("LabelHoG")) 
 			PanelSegTrainLabelHoG.generateLabelPatchHoGTrain(flags, methods, rstFolder.resolve("train.txt").toString());
 		else if (method.equals("Svm2SingleVec"))
 			PanelSegTrainSvm2SingleVec.generateSingleVec(methods, "PanelSegLabelRegHoGModels.java");
+		else if (method.equals("LabelRegSvm"))
+			PanelSegTrainLabelRegSvm.generateLabelRegSvmTrain(labels, methods, rstFolder.resolve("train.txt").toString());
 		
 		System.out.println("Processing Completed!");
 	}
@@ -114,6 +113,7 @@ class PanelSegTrain
 			System.out.println("LabelHoG	Compute HoG features for label detection");
 			System.out.println("Svm2SingleVec	Convert Linear SVM model to Single Vector");
 			System.out.println("LabelBootStrap	BootStrap Neg Patchs for HoG method of Label Recongition");
+			System.out.println("LabelRegSvm		Panel Label Recognition SVM training");
 			return;
 		}
 		
@@ -148,6 +148,9 @@ class PanelSegTrain
 		case "LabelBootStrap": 
 			train = PanelSegTrainLabelBootStrap.createPanelSegTrain(method, src_path, rst_path);
 			break;
+		case "LabelRegSvm": 
+			train = PanelSegTrainLabelRegSvm.createPanelSegTrain(method, src_path, rst_path);
+			break;
 		default:
 			System.out.println(method + " is not known.");
 			return;
@@ -157,6 +160,8 @@ class PanelSegTrain
 		train.trainSingleThread();
 		//train.trainMultiThreads(10);
 		
+		//Finalize
+		train.Finalize();
 	}	
 
 }

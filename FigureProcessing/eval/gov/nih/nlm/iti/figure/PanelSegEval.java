@@ -165,12 +165,12 @@ public class PanelSegEval
 	/**
 	 * Evaluate Panel Label Recognition. 
 	 * The precision and recall of Each individual Panel Label Character are calculated. 
-	 * The overall precision and recall are also calcuated. 
+	 * The overall precision and recall are also calculated. 
 	 * NOTE: it is case insensitive, i.e., 'A' and 'a' are merged as one entry of 'a'. 
 	 */
 	private void EvaluateLabelRecog()
 	{
-		char lastChar = Character.toLowerCase(PanelSeg.labelArray[PanelSeg.labelArray.length-1]), firstChar = Character.toLowerCase(PanelSeg.labelArray[0]);
+		char lastChar = Character.toLowerCase(PanelSeg.labelToDetect[PanelSeg.labelToDetect.length-1]), firstChar = Character.toLowerCase(PanelSeg.labelToDetect[0]);
 		int n = lastChar - firstChar + 1; 
 		int[] countIndividualLabelGT = new int[n];
 		int[] countIndividualLabelAuto = new int[n];
@@ -246,7 +246,7 @@ public class PanelSegEval
 
     		for (int i = 0; i < countIndividualLabelGT.length; i++)
     		{
-    			item = "" + (char)(PanelSeg.labelArray[0] + i);
+    			item = "" + (char)(PanelSeg.labelToDetect[0] + i);
         		countGT = countIndividualLabelGT[i]; countAuto = countIndividualLabelAuto[i]; countCorrect = countIndividualLabelCorrect[i];
         		precision = (float)countCorrect / countAuto; precision = (float) (((int)(precision*1000+0.5))/10.0);
         		recall = (float)countCorrect / countGT; recall = (float) (((int)(recall*1000+0.5))/10.0);
@@ -323,7 +323,7 @@ public class PanelSegEval
 			
 			for (int j = 0; j < segmentationResult.size(); j++)
 			{
-				if (j == 2) break; //We just save the top patches for training, in order to avoiding collecting a very large training set at the beginning.
+				if (j == 2) break; //We just save the top patches for training, in order to avoiding collecting a very large negative training set at the beginning.
 				
 				PanelSegInfo segInfo = segmentationResult.get(j);
 				Rectangle rectangle = segInfo.labelRect;
@@ -333,7 +333,7 @@ public class PanelSegEval
 				resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
 				
 				//Construct filename
-				Path resultPatchFolder = Character.isUpperCase(PanelSeg.labelArray[k])? rstFolder.resolve(segInfo.panelLabel + "_") : rstFolder.resolve(segInfo.panelLabel);	
+				Path resultPatchFolder = Character.isUpperCase(PanelSeg.labelToDetect[k])? rstFolder.resolve(segInfo.panelLabel + "_") : rstFolder.resolve(segInfo.panelLabel);	
 				if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
 				String resultFilename = path.getFileName().toString();
 				int pos = resultFilename.lastIndexOf('.');
@@ -454,8 +454,8 @@ public class PanelSegEval
 
 		System.out.println("Start Segmentation ... ");
 		eval.startTime = System.currentTimeMillis();
-		eval.segSingleThread();
-		//eval.segMultiThreads(10);
+		//eval.segSingleThread();
+		eval.segMultiThreads(10);
 		eval.endTime = System.currentTimeMillis();
 
 		System.out.println("Save segmentation results ... ");

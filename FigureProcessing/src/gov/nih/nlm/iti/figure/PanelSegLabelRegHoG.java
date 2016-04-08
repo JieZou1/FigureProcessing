@@ -41,11 +41,11 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 	
 	public PanelSegLabelRegHoG() 
 	{
-		int n = PanelSeg.labelArray.length;		svmModels = new float[n][];
+		int n = PanelSeg.labelToDetect.length;		svmModels = new float[n][];
 		for (int i = 0; i < n; i++)
 		{
 			String classString = "gov.nih.nlm.iti.figure.PanelSegLabelRegHoGModel_";
-			classString += Character.isUpperCase(PanelSeg.labelArray[i]) ?  PanelSeg.labelArray[i] + "_" : PanelSeg.labelArray[i];
+			classString += Character.isUpperCase(PanelSeg.labelToDetect[i]) ?  PanelSeg.labelToDetect[i] + "_" : PanelSeg.labelToDetect[i];
 			try {
 				Class<?> cls = Class.forName(classString);
 				Field field = cls.getField("svmModel");
@@ -69,7 +69,7 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 	{
 		super.segment(image);
 
-		int n = PanelSeg.labelArray.length;
+		int n = PanelSeg.labelToDetect.length;
 		figure.segmentationResultIndividualLabel = new ArrayList<ArrayList<PanelSegInfo>>();
 		for (int i = 0; i < n; i++) figure.segmentationResultIndividualLabel.add(null);
 		
@@ -85,7 +85,7 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 		//for (int i = 0; i < n; i++)
 		for (int i = 0; i <= 6; i++)
 		{
-			char panelLabel = labelArray[i];
+			char panelLabel = labelToDetect[i];
 			float[] svmModel = svmModels[i];
 			double minSize = labelMinSizes[i] * scale;
 			double maxSize = labelMaxSizes[i] * scale;
@@ -94,11 +94,11 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 			
 			//Search on original and inverted images (after scaling of course)
 			ArrayList<PanelSegInfo> candidates1 = DetectMultiScale(imgScaled, maxSize, minSize, panelLabel, false);
-			ArrayList<PanelSegInfo> candidates2 = DetectMultiScale(imgeScaledInverted, maxSize, minSize, panelLabel, true);
+			//ArrayList<PanelSegInfo> candidates2 = DetectMultiScale(imgeScaledInverted, maxSize, minSize, panelLabel, true);
 			
 			ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
 			if (candidates1 != null) candidates.addAll(candidates1);
-			if (candidates2 != null) candidates.addAll(candidates2);
+			//if (candidates2 != null) candidates.addAll(candidates2);
 			
 			if (candidates.size() > 0)
 			{

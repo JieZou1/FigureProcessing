@@ -36,17 +36,20 @@ enum Orientation { Horizontal, Vertical }
  */
 public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm 
 {
-	static char[] labelArray = { 'a','A','b','B','c','d','D','e','E','f','F','g','G','h','H','i','I','j','J','k','l','L','M','N','o','p','Q','R'};	//all possible panel labels
+	static char[] labelToDetect = { 'a','A','b','B','c','d','D','e','E','f','F','g','G','h','H','i','I','j','J','k','l','L','M','N','o','p','Q','R'};	//all possible panel labels
 	static int[] labelMinSizes = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10};	//The minimum side length of panel labels
 	static int[] labelMaxSizes = {70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70};	//The maximum side length of panel labels
-	static int getLabelArrayIndex(char ch)
+	static int getLabelToDetectIndex(char ch)
 	{
-		for (int i = 0; i < labelArray.length; i++)
+		for (int i = 0; i < labelToDetect.length; i++)
 		{
-			if (labelArray[i] == ch)				return i;
+			if (labelToDetect[i] == ch)				return i;
 		}
 		return -1;
 	}
+	
+	static char[] labelToReg = {'a', 'A', 'b', 'B', 'c', 'd', 'D'}; //All possible panel labels to recognize
+	static char[] labelToRegTodo = {'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'k', 'o', 'R', 't'}; //All possible panel labels to recognize (but not ready yet, To Be Done) 
 	
 	/**
 	 * Some common initialization functions for all extended panel segmentation algorithms, including: <p>
