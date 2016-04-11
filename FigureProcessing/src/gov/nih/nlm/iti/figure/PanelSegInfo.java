@@ -21,6 +21,8 @@ public class PanelSegInfo
 	Rectangle labelRect;
 	double labelScore;
 	
+	double[] labelProbs;	//The posterior probabilities of all possible classes. Mostly used to find an optimal label set.
+	
 	boolean labelInverted; //label is inverted if the character is black. Otherwise it is not inverted.
 }
 

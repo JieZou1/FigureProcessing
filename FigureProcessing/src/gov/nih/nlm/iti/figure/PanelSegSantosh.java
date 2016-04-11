@@ -28,8 +28,8 @@ public final class PanelSegSantosh extends PanelSeg
 	 * Call getResult* functions to retrieve result in different format.
 	 */
 	public void segment(Mat image)  
-	{		
-		super.segment(image);
+	{
+		preSegment(image);
 		
 		imagePreprocessed = preProcess();
 		imageLines = detectLineSegments();

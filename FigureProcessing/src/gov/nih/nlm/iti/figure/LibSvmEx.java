@@ -63,6 +63,23 @@ final class LibSvmEx
 
 		 return sv;
 	}
+    
+    public static svm_node[] float2SvmNode(float[] features) 
+    {
+		 svm_node[] svmNode = new svm_node[features.length + 1];
+		 
+		 for (int i = 0; i < features.length; i++)
+		 {
+			 if (Float.isNaN(features[i])) continue;
+			 svmNode[i] = new svm_node();
+			 svmNode[i].index = i+1;
+			 svmNode[i].value = features[i];
+		 }
+		 svmNode[features.length] = new svm_node();
+		 svmNode[features.length].index = -1;
+		 
+		 return svmNode;
+	}
 
     /**
      * Retrieve rho from loaded SVM model
@@ -91,6 +108,35 @@ final class LibSvmEx
 		}
 
 		 return rho;
+	}
+
+    /**
+     * Retrieve nr_class from loaded SVM model
+     * @param svModel
+     * @return svm_model.nr_class
+     */
+    public static int getNrClass(svm_model svModel) 
+    {
+    	Field nrClassField = null;
+    	
+		try
+		{
+			nrClassField = svModel.getClass().getDeclaredField("nr_class");
+		} catch (NoSuchFieldException | SecurityException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		nrClassField.setAccessible(true);
+		 
+		 int nrClass = 0;
+		try {
+			nrClass = (int) nrClassField.get(svModel);
+		} catch (IllegalArgumentException | IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		 return nrClass;
 	}
     
     /**

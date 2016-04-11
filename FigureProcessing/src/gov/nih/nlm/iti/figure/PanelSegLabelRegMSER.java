@@ -9,7 +9,7 @@ class PanelSegLabelRegMSER extends PanelSeg
 {
 	public void segment(Mat image)  
 	{
-		super.segment(image);
+		preSegment(image);
 		
 		PointVectorVector points = new PointVectorVector();
 		RectVector boxes = new RectVector();

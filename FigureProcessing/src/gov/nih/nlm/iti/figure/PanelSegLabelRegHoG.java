@@ -11,10 +11,10 @@ import org.bytedeco.javacpp.FloatPointer;
 import org.bytedeco.javacpp.opencv_core.*;
 import org.bytedeco.javacpp.opencv_objdetect.HOGDescriptor;
 
-public final class PanelSegLabelRegHoG extends PanelSeg 
+public class PanelSegLabelRegHoG extends PanelSeg 
 {
 	//The HoG parameters used in both training and testing
-    static private Size winSize_64 = new Size(64, 64);
+    static protected Size winSize_64 = new Size(64, 64);
 //    static private Size winSize_32 = new Size(32, 32); //The size of the training label patches
     static private Size blockSize = new Size(16, 16);
     static private Size blockStride = new Size(8, 8);
@@ -36,8 +36,8 @@ public final class PanelSegLabelRegHoG extends PanelSeg
     
     static private double minimumLabelSize = 12.0;	//We assume the smallest label patch is 12x12.
     
-	private HOGDescriptor hog;
-	private float[][] svmModels;
+    private HOGDescriptor hog;
+    private float[][] svmModels;
 	
 	public PanelSegLabelRegHoG() 
 	{
@@ -63,20 +63,27 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 	/**
 	 * The main entrance function to perform segmentation.
 	 * Call getResult* functions to retrieve result in different format.
-	 * @throws Exception 
 	 */
 	public void segment(Mat image)  
 	{
-		super.segment(image);
+		preSegment(image);
 
+		HoGDetect();
+		
+		//TODO: merge all segmentationResultIndividualLabel to one set of label result and save to segmentationResult
+		MergeDetectedLabelsSimple();
+	}
+	
+	protected void HoGDetect() 
+	{
 		int n = PanelSeg.labelToDetect.length;
 		figure.segmentationResultIndividualLabel = new ArrayList<ArrayList<PanelSegInfo>>();
 		for (int i = 0; i < n; i++) figure.segmentationResultIndividualLabel.add(null);
 		
 		//Resize the image. 
         double scale = 64.0 / minimumLabelSize; //check statistics.txt to decide this scaling factor.
-        int _width = (int)(image.cols() * scale + 0.5);
-        int _height = (int)(image.rows() * scale + 0.5);
+        int _width = (int)(figure.imageWidth * scale + 0.5);
+        int _height = (int)(figure.imageHeight * scale + 0.5);
         Size newSize = new Size(_width, _height);
         Mat imgScaled = new Mat(); resize(figure.imageGray, imgScaled, newSize);
         Mat imgeScaledInverted = new Mat(); resize(figure.imageGrayInverted, imgeScaledInverted, newSize);
@@ -143,9 +150,6 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 				figure.segmentationResultIndividualLabel.set(i, segmentationResult);
 			}
 		}
-		
-		//TODO: merge all segmentationResultIndividualLabel to one set of label result and save to segmentationResult
-		MergeDetectedLabelsSimple();
 	}
 	
 	private ArrayList<PanelSegInfo> DetectMultiScale(Mat img, double maxSize, double minSize, char panelLabel, Boolean inverted)
@@ -185,7 +189,7 @@ public final class PanelSegLabelRegHoG extends PanelSeg
 	 * The simplest method to merge label detection results saved in segmentationResultIndividualLabel to segmentationResult <p>
 	 * This method simply combine all detected results
 	 */
-	private void MergeDetectedLabelsSimple() 
+	protected void MergeDetectedLabelsSimple() 
 	{
 		figure.segmentationResult = new ArrayList<PanelSegInfo>(); //Reset
 		if (figure.segmentationResultIndividualLabel == null) return;

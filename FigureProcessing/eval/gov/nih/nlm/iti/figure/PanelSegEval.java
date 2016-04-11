@@ -66,6 +66,7 @@ public class PanelSegEval
 				case "Santosh": segmentors.add(new PanelSegSantosh());			break;
 				case "LabelRegMSER": segmentors.add(new PanelSegLabelRegMSER());break;
 				case "LabelRegHoG": segmentors.add(new PanelSegLabelRegHoG());break;
+				case "LabelRegHoGSvm": segmentors.add(new PanelSegLabelRegHoGSvm());break;
 				}
 			}
 		}
@@ -425,6 +426,7 @@ public class PanelSegEval
 			System.out.println("Santosh		Santosh's method based on long line segments");
 			System.out.println("LabelRegMSER	MSER method for recognizing Label candidate regions");
 			System.out.println("LabelRegHoG	HoG method for recognizing Label candidate regions");
+			System.out.println("LabelRegHoGSvm	HoG method followed by SVM classification for recognizing Label candidate regions");
 			return;
 		}
 		
@@ -447,6 +449,7 @@ public class PanelSegEval
 		case "Santosh": break;
 		case "LabelRegMSER": break;
 		case "LabelRegHoG": break;
+		case "LabelRegHoGSvm": break;
 		default: System.out.println(method + " is not known.");	return;
 		}
 		

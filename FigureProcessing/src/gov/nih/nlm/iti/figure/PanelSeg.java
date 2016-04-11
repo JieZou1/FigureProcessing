@@ -57,10 +57,10 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	 * 2. Generate gray image, imageGray, imageGrayInverted <p>
 	 * 3. Construct segmentation result, segmentationResult.
 	 * 
-	 * Generally, the segment function of all extended classes should call this super class function 
+	 * Generally, the segment function of all extended classes should call this preSegment function 
 	 * @param image
 	 */
- 	public void segment(Mat image) 
+	protected void preSegment(Mat image) 
 	{
 		figure = new Figure(image);	//Construct a figure object for saving processing results
 		figure.imageGray = new Mat();		cvtColor(figure.image, figure.imageGray, CV_BGR2GRAY);
@@ -68,6 +68,9 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 		
 		figure.segmentationResult = new ArrayList<PanelSegInfo>();		
 	}
+	
+ 	public abstract void segment(Mat image);
+ 	
 	/**
 	 * The entrance function to perform panel segmentation. <p>
 	 * It simply loads the image from the file, and then calls segment(Mat image) function.

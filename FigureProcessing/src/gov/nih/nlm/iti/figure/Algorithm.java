@@ -43,7 +43,7 @@ abstract public class Algorithm
 	 * @param in
 	 * @return Mat image in BGR format
 	 */
-	static Mat bufferdImg2Mat(BufferedImage in)
+	protected static Mat bufferdImg2Mat(BufferedImage in)
 	{
 		if (in.getType() != BufferedImage.TYPE_INT_RGB)		in = convert(in, BufferedImage.TYPE_INT_RGB);
 		
