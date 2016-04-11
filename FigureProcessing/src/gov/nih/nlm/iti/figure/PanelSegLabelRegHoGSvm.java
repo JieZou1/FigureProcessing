@@ -39,7 +39,8 @@ public final class PanelSegLabelRegHoGSvm extends PanelSegLabelRegHoG
 	
 		SvmClassification();
 
-		MergeDetectedLabelsSimple();
+		//MergeDetectedLabelsSimple();
+		MergeRecognitionLabelsSimple();
 	}
 
 	private void SvmClassification() 
@@ -53,8 +54,8 @@ public final class PanelSegLabelRegHoGSvm extends PanelSegLabelRegHoG
 				PanelSegInfo info = infos.get(j);
 				if (info == null) continue;
 				
-				int x = info.labelRect.x, y = info.labelRect.y, w = info.labelRect.width, h = info.labelRect.height;
-				Mat patch = info.labelInverted ? figure.imageGrayInverted.apply(new Rect(x, y, w, h)) : figure.imageGray.apply(new Rect(x, y, w, h));
+				//int x = info.labelRect.x, y = info.labelRect.y, w = info.labelRect.width, h = info.labelRect.height;
+				Mat patch = info.labelInverted ? AlgorithmEx.cropImage(figure.imageGrayInverted, info.labelRect) : AlgorithmEx.cropImage(figure.imageGray, info.labelRect);
 		        Mat patchNormalized = new Mat(); resize(patch, patchNormalized, winSize_64);
 				
 		        float[] feature = featureExtraction(patchNormalized);
@@ -63,7 +64,30 @@ public final class PanelSegLabelRegHoGSvm extends PanelSegLabelRegHoG
 
 		        info.labelProbs = probs;		        infos.set(j, info);
 			}
-			figure.segmentationResultIndividualLabel.set(i, infos);
+			//figure.segmentationResultIndividualLabel.set(i, infos);
+		}
+	}
+
+	private void MergeRecognitionLabelsSimple()
+	{
+		MergeDetectedLabelsSimple();
+		
+		if (figure.segmentationResult.size() > 0)
+		{
+			//set label and score according to the max of labelProbs, computed by SVM
+			ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
+	        for (int j = 0; j < figure.segmentationResult.size(); j++)
+	        {
+	        	PanelSegInfo obj = figure.segmentationResult.get(j);
+	        	int maxIndex = AlgorithmEx.findMaxIndex(obj.labelProbs);
+	        	if (maxIndex == labelToReg.length) continue; //Classified as a negative sample.
+	        		
+		        obj.labelScore = obj.labelProbs[maxIndex];
+		        obj.panelLabel = "" + labelToReg[maxIndex];
+		        candidates.add(obj);
+	        }
+			
+	        figure.segmentationResult = RemoveOverlappedCandidates(candidates);
 		}
 	}
 }

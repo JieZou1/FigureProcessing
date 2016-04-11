@@ -93,7 +93,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	 */
 	public void segment(BufferedImage buffered_image) throws Exception
 	{
-		Mat image = Algorithm.bufferdImg2Mat(buffered_image);
+		Mat image = AlgorithmEx.bufferdImg2Mat(buffered_image);
 		segment(image);
 	}
 	
@@ -153,14 +153,14 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 		for (int i = 0; i < shapeNodes.getLength(); i++)
 		{
 			Node shapeNode = shapeNodes.item(i);
-			Node blockTextNode = getChildNode(shapeNode, "BlockText");
-			Node textNode = getChildNode(blockTextNode, "Text");
+			Node blockTextNode = AlgorithmEx.getChildNode(shapeNode, "BlockText");
+			Node textNode = AlgorithmEx.getChildNode(blockTextNode, "Text");
 			String text = textNode.getTextContent().toLowerCase();
 			
 			if (text.startsWith("panel "))
 			{	//It is a panel
-				Node dataNode = getChildNode(shapeNode, "Data");
-				Node extentNode = getChildNode(dataNode, "Extent");
+				Node dataNode = AlgorithmEx.getChildNode(shapeNode, "Data");
+				Node extentNode = AlgorithmEx.getChildNode(dataNode, "Extent");
 				NamedNodeMap attributes = extentNode.getAttributes();
 				int x = (int)(Double.parseDouble(attributes.getNamedItem("X").getTextContent()));
 				int y = (int)(Double.parseDouble(attributes.getNamedItem("Y").getTextContent()));
@@ -175,8 +175,8 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 			}
 			else
 			{	//It is a label
-				Node dataNode = getChildNode(shapeNode, "Data");
-				Node extentNode = getChildNode(dataNode, "Extent");
+				Node dataNode = AlgorithmEx.getChildNode(shapeNode, "Data");
+				Node extentNode = AlgorithmEx.getChildNode(dataNode, "Extent");
 				NamedNodeMap attributes = extentNode.getAttributes();
 				int x = (int)(Double.parseDouble(attributes.getNamedItem("X").getTextContent()));
 				int y = (int)(Double.parseDouble(attributes.getNamedItem("Y").getTextContent()));
@@ -263,13 +263,13 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 			Node panelNode = panelNodes.item(i);
 			PanelSegInfo panel = new PanelSegInfo();
 			
-			Node panelRectNode = getChildNode(panelNode, "panelRect");
+			Node panelRectNode = AlgorithmEx.getChildNode(panelNode, "panelRect");
 			if (panelRectNode != null)
 			{
-				Node xNode = getChildNode(panelRectNode, "x");
-				Node yNode = getChildNode(panelRectNode, "y");
-				Node widthNode = getChildNode(panelRectNode, "width");
-				Node heightNode = getChildNode(panelRectNode, "height");
+				Node xNode = AlgorithmEx.getChildNode(panelRectNode, "x");
+				Node yNode = AlgorithmEx.getChildNode(panelRectNode, "y");
+				Node widthNode = AlgorithmEx.getChildNode(panelRectNode, "width");
+				Node heightNode = AlgorithmEx.getChildNode(panelRectNode, "height");
 				
 				int x = Integer.parseInt(xNode.getTextContent());
 				int y = Integer.parseInt(yNode.getTextContent());
@@ -278,19 +278,19 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 				panel.panelRect = new Rectangle(x, y, width, height);
 			}
 			
-			Node panelLabelNode = getChildNode(panelNode, "panelLabel");
+			Node panelLabelNode = AlgorithmEx.getChildNode(panelNode, "panelLabel");
 			if (panelLabelNode != null)
 			{
 				panel.panelLabel = panelLabelNode.getTextContent();
 			}
 			
-			Node labelRectNode = getChildNode(panelNode, "labelRect");
+			Node labelRectNode = AlgorithmEx.getChildNode(panelNode, "labelRect");
 			if (labelRectNode != null)
 			{
-				Node xNode = getChildNode(labelRectNode, "x");
-				Node yNode = getChildNode(labelRectNode, "y");
-				Node widthNode = getChildNode(labelRectNode, "width");
-				Node heightNode = getChildNode(labelRectNode, "height");
+				Node xNode = AlgorithmEx.getChildNode(labelRectNode, "x");
+				Node yNode = AlgorithmEx.getChildNode(labelRectNode, "y");
+				Node widthNode = AlgorithmEx.getChildNode(labelRectNode, "width");
+				Node heightNode = AlgorithmEx.getChildNode(labelRectNode, "height");
 				
 				int x = Integer.parseInt(xNode.getTextContent());
 				int y = Integer.parseInt(yNode.getTextContent());
@@ -299,7 +299,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 				panel.labelRect = new Rectangle(x, y, width, height);
 			}
 			
-			Node labelScoreNode = getChildNode(panelNode, "labelScore");
+			Node labelScoreNode = AlgorithmEx.getChildNode(panelNode, "labelScore");
 			if (labelScoreNode != null)
 			{
 				panel.labelScore = Double.parseDouble(labelScoreNode.getTextContent());

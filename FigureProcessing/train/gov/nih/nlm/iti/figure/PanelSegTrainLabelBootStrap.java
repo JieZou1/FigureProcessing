@@ -72,7 +72,7 @@ final class PanelSegTrainLabelBootStrap extends PanelSegTrainMethod
 				PanelSegInfo segInfo = segmentationResult.get(j);
 				Rectangle rectangle = segInfo.labelRect;
 				
-				Mat patch = segInfo.labelInverted ? Algorithm.CropImage(hog.figure.imageGrayInverted, rectangle) : 	Algorithm.CropImage(hog.figure.imageGray, rectangle);
+				Mat patch = segInfo.labelInverted ? AlgorithmEx.cropImage(hog.figure.imageGrayInverted, rectangle) : AlgorithmEx.cropImage(hog.figure.imageGray, rectangle);
 				resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
 				
 				//Construct filename

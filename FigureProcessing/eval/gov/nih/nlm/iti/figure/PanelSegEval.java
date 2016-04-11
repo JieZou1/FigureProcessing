@@ -329,8 +329,8 @@ public class PanelSegEval
 				PanelSegInfo segInfo = segmentationResult.get(j);
 				Rectangle rectangle = segInfo.labelRect;
 				
-				Mat patch = segInfo.labelInverted ? Algorithm.CropImage(segmentor.figure.imageGrayInverted, rectangle) : 
-					Algorithm.CropImage(segmentor.figure.imageGray, rectangle);
+				Mat patch = segInfo.labelInverted ? AlgorithmEx.cropImage(segmentor.figure.imageGrayInverted, rectangle) : 
+					AlgorithmEx.cropImage(segmentor.figure.imageGray, rectangle);
 				resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
 				
 				//Construct filename

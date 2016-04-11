@@ -139,7 +139,7 @@ final class PanelSegTrainLabelCrop extends PanelSegTrainMethod
 		Mat patchGray = gray.apply(new Rect(rectangle.x, rectangle.y, rectangle.width, rectangle.height));
 		Mat patchBina = new Mat();		threshold(patchGray, patchBina, 0, 255, CV_THRESH_BINARY | THRESH_OTSU);
 		
-		Rect boundingRect = Algorithm.findBoundingbox(patchBina);
+		Rect boundingRect = AlgorithmEx.findBoundingbox(patchBina);
 		//Mat patchBinaTightest = patchBina.apply(boundingRect);
 		
 		//Make it square and then expand 10% in each direction

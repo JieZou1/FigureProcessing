@@ -11,7 +11,7 @@ import org.bytedeco.javacpp.FloatPointer;
 import org.bytedeco.javacpp.opencv_core.*;
 import org.bytedeco.javacpp.opencv_objdetect.HOGDescriptor;
 
-public class PanelSegLabelRegHoG extends PanelSeg 
+public class PanelSegLabelRegHoG extends PanelSegLabelReg
 {
 	//The HoG parameters used in both training and testing
     static protected Size winSize_64 = new Size(64, 64);
@@ -109,33 +109,7 @@ public class PanelSegLabelRegHoG extends PanelSeg
 			
 			if (candidates.size() > 0)
 			{
-				//Sort candidates and remove largely overlapped candidates.
-				candidates.sort(new ScoreComp());
-				
-				//Remove largely overlapped candidates
-				ArrayList<PanelSegInfo> results = new ArrayList<PanelSegInfo>();        results.add(candidates.get(0));
-		        for (int j = 1; j < candidates.size(); j++)
-		        {
-		        	PanelSegInfo obj = candidates.get(j);            Rectangle obj_rect = obj.labelRect;
-		            double obj_area = obj_rect.width * obj_rect.height;
-
-		            //Check with existing ones, if significantly overlapping with existing ones, ignore
-		            Boolean overlapping = false;
-		            for (int k = 0; k < results.size(); k++)
-		            {
-		                Rectangle result_rect = results.get(k).labelRect;
-		                Rectangle intersection = obj_rect.intersection(result_rect);
-		                if (intersection.isEmpty()) continue;
-		                double intersection_area = intersection.width * intersection.height;
-		                double result_area = result_rect.width * result_rect.height;
-		                if (intersection_area > obj_area / 2 || intersection_area > result_area / 2)
-		                {
-		                    overlapping = true; break;
-		                }
-		            }
-		            if (!overlapping) results.add(obj);
-		        }
-		        candidates = results;
+				candidates = RemoveOverlappedCandidates(candidates);
 
 				//Scale back to the original size, and save the result to figure.segmentationResultIndividualLabel
 				ArrayList<PanelSegInfo> segmentationResult = new ArrayList<PanelSegInfo>();

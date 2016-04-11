@@ -47,7 +47,7 @@ public final class PanelSegJaylene extends PanelSeg
 	public void segment(String image_file_path) 
 	{
 		matImage = imread(image_file_path, CV_LOAD_IMAGE_COLOR);
-		bufferedImage = Algorithm.mat2BufferdImg(matImage);
+		bufferedImage = AlgorithmEx.mat2BufferdImg(matImage);
 
 		segment();
 	}
@@ -59,8 +59,8 @@ public final class PanelSegJaylene extends PanelSeg
 	 */
 	public void segment(BufferedImage image)
 	{
-		matImage = Algorithm.bufferdImg2Mat(image);
-		bufferedImage = Algorithm.mat2BufferdImg(matImage);
+		matImage = AlgorithmEx.bufferdImg2Mat(image);
+		bufferedImage = AlgorithmEx.mat2BufferdImg(matImage);
 		segment();
 	}
 	
@@ -72,7 +72,7 @@ public final class PanelSegJaylene extends PanelSeg
 	public void segment(Mat image)
 	{
 		matImage = image;
-		bufferedImage = Algorithm.mat2BufferdImg(image);
+		bufferedImage = AlgorithmEx.mat2BufferdImg(image);
 		segment();
 	}
 }
