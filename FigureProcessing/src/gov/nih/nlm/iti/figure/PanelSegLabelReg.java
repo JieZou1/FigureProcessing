@@ -13,6 +13,8 @@ public abstract class PanelSegLabelReg extends PanelSeg
 	 */
 	protected ArrayList<PanelSegInfo> RemoveOverlappedCandidates(ArrayList<PanelSegInfo> candidates) 
 	{
+		if (candidates == null || candidates.size() == 0 || candidates.size() == 1) return candidates;
+		
         candidates.sort(new ScoreComp());
 		
 		//Remove largely overlapped candidates

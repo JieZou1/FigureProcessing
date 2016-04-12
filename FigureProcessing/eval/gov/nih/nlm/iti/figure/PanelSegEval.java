@@ -313,39 +313,66 @@ public class PanelSegEval
 		Path path = allPaths.get(i);		PanelSeg segmentor = segmentors.get(i);
 		
 		String filename = path.toString();
+//		if (!filename.endsWith("1749-799X-4-23-3.jpg"))
+//			return;
+		
 		System.out.println("Processing "+ i + " "  + filename);
 		segmentor.segment(filename);
 	
-		//Save detected patches
-		for (int k = 0; k < segmentor.figure.segmentationResultIndividualLabel.size(); k++)
+		//synchronized(segmentors)
 		{
-			ArrayList<PanelSegInfo> segmentationResult = segmentor.figure.segmentationResultIndividualLabel.get(k);
-			if (segmentationResult == null) continue;
-			
-			for (int j = 0; j < segmentationResult.size(); j++)
+			//Save detected patches
+			for (int k = 0; k < segmentor.figure.segmentationResultIndividualLabel.size(); k++)
 			{
-				if (j == 2) break; //We just save the top patches for training, in order to avoiding collecting a very large negative training set at the beginning.
+				ArrayList<PanelSegInfo> segmentationResult = segmentor.figure.segmentationResultIndividualLabel.get(k);
+				if (segmentationResult == null) continue;
 				
-				PanelSegInfo segInfo = segmentationResult.get(j);
-				Rectangle rectangle = segInfo.labelRect;
-				
-				Mat patch = segInfo.labelInverted ? AlgorithmEx.cropImage(segmentor.figure.imageGrayInverted, rectangle) : 
-					AlgorithmEx.cropImage(segmentor.figure.imageGray, rectangle);
-				resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
-				
-				//Construct filename
-				Path resultPatchFolder = Character.isUpperCase(PanelSeg.labelToDetect[k])? rstFolder.resolve(segInfo.panelLabel + "_") : rstFolder.resolve(segInfo.panelLabel);	
-				if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
-				String resultFilename = path.getFileName().toString();
-				int pos = resultFilename.lastIndexOf('.');
-				
-				resultFilename = resultFilename.substring(0, pos) + "." + rectangle.toString() + "." + segInfo.labelInverted + ".bmp";
-				Path resultPatchFile = resultPatchFolder.resolve(resultFilename);
-				imwrite(resultPatchFile.toString(), patch);
+				for (int j = 0; j < segmentationResult.size(); j++)
+				{
+					if (j == 2) break; //We just save the top patches for training, in order to avoiding collecting a very large negative training set at the beginning.
+					
+					PanelSegInfo segInfo = segmentationResult.get(j);
+					Rectangle rectangle = segInfo.labelRect;
+					
+					Mat patch = segInfo.labelInverted ? AlgorithmEx.cropImage(segmentor.figure.imageGrayInverted, rectangle) : 
+						AlgorithmEx.cropImage(segmentor.figure.imageGray, rectangle);
+					resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
+					
+					//Construct filename
+					Path resultPatchFolder = Character.isUpperCase(PanelSeg.labelToDetect[k])? rstFolder.resolve(segInfo.panelLabel + "_") : rstFolder.resolve(segInfo.panelLabel);	
+					if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
+					String resultFilename = path.getFileName().toString();
+					int pos = resultFilename.lastIndexOf('.');
+					
+					resultFilename = resultFilename.substring(0, pos) + "." + rectangle.toString() + "." + segInfo.labelInverted + ".bmp";
+					Path resultPatchFile = resultPatchFolder.resolve(resultFilename);
+					imwrite(resultPatchFile.toString(), patch);
+				}
+			}
+			
+			//Save Final Segmentation Result
+			//2.1 Save result in images
+			Mat img_result = segmentor.getSegmentationResultInMat();
+			String img_file = rstFolder.resolve(path.getFileName()).toString();
+			imwrite(img_file, img_result);
+			
+			// 2.2 Save result in xml files
+			ArrayList<PanelSegInfo> xml_result = segmentor.getSegmentationResult();
+			String xml = xStream.toXML(xml_result);
+			String xml_file = rstFolder.resolve(path.getFileName()).toString().replace(".jpg", ".xml");
+			try (FileWriter fw = new FileWriter(xml_file))
+			{
+				fw.write(xml);
+			}
+			catch (IOException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private void saveResults() 
 	{
 		for (int i = 0; i < allPaths.size(); i++)
@@ -461,8 +488,8 @@ public class PanelSegEval
 		eval.segMultiThreads(10);
 		eval.endTime = System.currentTimeMillis();
 
-		System.out.println("Save segmentation results ... ");
-		eval.saveResults();
+//		System.out.println("Save segmentation results ... ");
+		//eval.saveResults();
 		
 		System.out.println("Save evaluation result ... ");
 		eval.Evaluate();
