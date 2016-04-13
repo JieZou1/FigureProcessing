@@ -8,9 +8,9 @@ import java.util.ArrayList;
 import org.bytedeco.javacpp.opencv_core.*;
 import libsvm.*;
 
-public final class PanelSegLabelRegHoGSvm extends PanelSegLabelRegHoG
+class PanelSegLabelRegHoGSvm extends PanelSegLabelRegHoG
 {
-	private static svm_model svmModel;
+	protected static svm_model svmModel;
 	
 	public PanelSegLabelRegHoGSvm()
 	{
@@ -39,11 +39,10 @@ public final class PanelSegLabelRegHoGSvm extends PanelSegLabelRegHoG
 	
 		SvmClassification();
 
-		//MergeDetectedLabelsSimple();
 		MergeRecognitionLabelsSimple();
 	}
 
-	private void SvmClassification() 
+	protected void SvmClassification() 
 	{
 		for (int i = 0; i < figure.segmentationResultIndividualLabel.size(); i++)
 		{

@@ -67,6 +67,7 @@ public class PanelSegEval
 				case "LabelRegMSER": segmentors.add(new PanelSegLabelRegMSER());break;
 				case "LabelRegHoG": segmentors.add(new PanelSegLabelRegHoG());break;
 				case "LabelRegHoGSvm": segmentors.add(new PanelSegLabelRegHoGSvm());break;
+				case "LabelRegHoGSvmViterbi": segmentors.add(new PanelSegLabelRegHoGSvmViterbi());break;
 				}
 			}
 		}
@@ -454,6 +455,7 @@ public class PanelSegEval
 			System.out.println("LabelRegMSER	MSER method for recognizing Label candidate regions");
 			System.out.println("LabelRegHoG	HoG method for recognizing Label candidate regions");
 			System.out.println("LabelRegHoGSvm	HoG method followed by SVM classification for recognizing Label candidate regions");
+			System.out.println("LabelRegHoGSvmViterbi	HoG method followed by SVM classification and then Viterbi for recognizing Label sequences and their regions");
 			return;
 		}
 		
@@ -477,6 +479,7 @@ public class PanelSegEval
 		case "LabelRegMSER": break;
 		case "LabelRegHoG": break;
 		case "LabelRegHoGSvm": break;
+		case "LabelRegHoGSvmViterbi": break;
 		default: System.out.println(method + " is not known.");	return;
 		}
 		
