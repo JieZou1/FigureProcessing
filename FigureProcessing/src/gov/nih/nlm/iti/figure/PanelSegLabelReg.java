@@ -15,7 +15,7 @@ public abstract class PanelSegLabelReg extends PanelSeg
 	{
 		if (candidates == null || candidates.size() == 0 || candidates.size() == 1) return candidates;
 		
-        candidates.sort(new ScoreComp());
+        candidates.sort(new LabelScoreDescending());
 		
 		//Remove largely overlapped candidates
 		ArrayList<PanelSegInfo> results = new ArrayList<PanelSegInfo>();        results.add(candidates.get(0));

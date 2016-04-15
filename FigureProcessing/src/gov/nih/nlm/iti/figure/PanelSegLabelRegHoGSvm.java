@@ -69,24 +69,23 @@ class PanelSegLabelRegHoGSvm extends PanelSegLabelRegHoG
 
 	private void MergeRecognitionLabelsSimple()
 	{
-		MergeDetectedLabelsSimple();
+		mergeDetectedLabelsSimple();
+
+		if (figure.segmentationResult.size() == 0) return;
 		
-		if (figure.segmentationResult.size() > 0)
-		{
-			//set label and score according to the max of labelProbs, computed by SVM
-			ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
-	        for (int j = 0; j < figure.segmentationResult.size(); j++)
-	        {
-	        	PanelSegInfo obj = figure.segmentationResult.get(j);
-	        	int maxIndex = AlgorithmEx.findMaxIndex(obj.labelProbs);
-	        	if (maxIndex == labelToReg.length) continue; //Classified as a negative sample.
-	        		
-		        obj.labelScore = obj.labelProbs[maxIndex];
-		        obj.panelLabel = "" + labelToReg[maxIndex];
-		        candidates.add(obj);
-	        }
-			
-	        figure.segmentationResult = RemoveOverlappedCandidates(candidates);
-		}
+		//set label and score according to the max of labelProbs, computed by SVM
+		ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
+        for (int j = 0; j < figure.segmentationResult.size(); j++)
+        {
+        	PanelSegInfo obj = figure.segmentationResult.get(j);
+        	int maxIndex = AlgorithmEx.findMaxIndex(obj.labelProbs);
+        	if (maxIndex == labelToReg.length) continue; //Classified as a negative sample.
+        		
+	        obj.labelScore = obj.labelProbs[maxIndex];
+	        obj.panelLabel = "" + labelToReg[maxIndex];
+	        candidates.add(obj);
+        }
+		
+        figure.segmentationResult = RemoveOverlappedCandidates(candidates);
 	}
 }

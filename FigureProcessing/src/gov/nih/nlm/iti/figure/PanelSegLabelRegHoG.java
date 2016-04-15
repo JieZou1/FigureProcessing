@@ -29,8 +29,8 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
     //The HoG parameters used in testing only.
     static private double hitThreshold = 0;			//Threshold for the distance between features and SVM classifying plane.
     static private Size winStride = new Size(8, 8); //Sliding window step, It must be a multiple of block stride
-    //static private Size padding = new Size(0, 0);	//Adds a certain amount of extra pixels on each side of the input image
-    static private Size padding = new Size(32, 32);	//Adds a certain amount of extra pixels on each side of the input image
+    static private Size padding = new Size(0, 0);	//Adds a certain amount of extra pixels on each side of the input image
+    //static private Size padding = new Size(32, 32);	//Adds a certain amount of extra pixels on each side of the input image
     static private double scale0 = 1.05;			//Coefficient of the detection window increase
     static private int groupThreshold = 2;
     static private boolean useMeanShiftGrouping = false;
@@ -72,7 +72,7 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 		HoGDetect();
 		
 		//TODO: merge all segmentationResultIndividualLabel to one set of label result and save to segmentationResult
-		MergeDetectedLabelsSimple();
+		mergeDetectedLabelsSimple();
 	}
 	
 	protected void HoGDetect() 
@@ -164,7 +164,7 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 	 * The simplest method to merge label detection results saved in segmentationResultIndividualLabel to segmentationResult <p>
 	 * This method simply combine all detected results
 	 */
-	protected void MergeDetectedLabelsSimple() 
+	protected void mergeDetectedLabelsSimple() 
 	{
 		figure.segmentationResult = new ArrayList<PanelSegInfo>(); //Reset
 		if (figure.segmentationResultIndividualLabel == null) return;

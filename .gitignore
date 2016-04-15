@@ -19,6 +19,8 @@ temp/
 jar/
 doc/
 .recommenders/
+evaluation.txt
+*.jpage
 
 # External tool builders
 .externalToolBuilders/

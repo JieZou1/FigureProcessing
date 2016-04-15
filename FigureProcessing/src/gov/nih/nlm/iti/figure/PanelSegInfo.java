@@ -29,11 +29,9 @@ public class PanelSegInfo
 /**
  * Comparator for sorting PanelSegInfo in reverse order of labelScore.
  * @author Jie Zou
- *
  */
-class ScoreComp implements Comparator<PanelSegInfo>
+class LabelScoreDescending implements Comparator<PanelSegInfo>
 {
-
 	@Override
 	public int compare(PanelSegInfo o1, PanelSegInfo o2) 
 	{
@@ -45,3 +43,36 @@ class ScoreComp implements Comparator<PanelSegInfo>
 	
 }
 
+/**
+* Comparator for sorting PanelSegInfo vertically based on the LabelRect.Left
+* @author Jie Zou
+*/
+class LabelRectLeftAscending implements Comparator<PanelSegInfo>
+{
+	@Override
+	public int compare(PanelSegInfo o1, PanelSegInfo o2) 
+	{
+		double diff = o1.labelRect.x - o2.labelRect.x;
+		if (diff > 0) return 1;
+		else if (diff == 0) return 0;
+		else return -1;
+	}
+	
+}
+
+/**
+ * Comparator for sorting PanelSegInfo horizontally based on the LabelRect.Top
+ * @author Jie Zou
+ */
+class LabelRectTopAscending implements Comparator<PanelSegInfo>
+{
+	@Override
+	public int compare(PanelSegInfo o1, PanelSegInfo o2) 
+	{
+		double diff = o1.labelRect.y - o2.labelRect.y;
+		if (diff > 0) return 1;
+		else if (diff == 0) return 0;
+		else return -1;
+	}
+	
+}
