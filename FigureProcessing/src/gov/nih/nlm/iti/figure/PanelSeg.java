@@ -48,8 +48,8 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 		return -1;
 	}
 	
-	static char[] labelToReg = {'a', 'A', 'b', 'B', 'c', 'd', 'D'}; //All possible panel labels to recognize
-	static char[] labelToRegTodo = {'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'k', 'o', 'R', 't'}; //All possible panel labels to recognize (but not ready yet, To Be Done) 
+	static char[] labelToReg 	 = {'a', 'A', 'b', 'B', 'c', 'd', 'D'}; //All possible panel labels to recognize
+	static char[] labelToRegTodo = {'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'k', 'o', 'R', 't'}; //All possible panel labels to recognize (but not ready yet, To Be Done)
 	
 	/**
 	 * Some common initialization functions for all extended panel segmentation algorithms, including: <p>

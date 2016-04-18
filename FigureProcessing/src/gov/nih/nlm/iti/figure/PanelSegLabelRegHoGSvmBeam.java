@@ -23,10 +23,10 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 	
 		SvmClassification();	//SVM (RBF kernel) classification of each detected patch in figure.segmentationResultIndividualLabel.
 
-		mergeRecognitionLabelsViterbi();
+		mergeRecognitionLabelsBeam();
 	}
 
-	private void mergeRecognitionLabelsViterbi() 
+	private void mergeRecognitionLabelsBeam() 
 	{
 		mergeDetectedLabelsSimple(); //All detected patches are merged into figure.segmentationResult
 		
@@ -38,7 +38,7 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 	private void sortPatchesHori()
 	{
 		ArrayList<PanelSegInfo> candidates = figure.segmentationResult;
-        candidates.sort(new LabelRectTopAscending());
+        candidates.sort(new LabelRectTopAscending()); //Sort detected patches according to their top
 
         //Break them into lines
         ArrayList<ArrayList<PanelSegInfo>> candidateLines = new ArrayList<ArrayList<PanelSegInfo>>();
@@ -49,7 +49,7 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
         for (int i = 1; i < candidates.size(); i++)
         {
         	candidate = candidates.get(i);
-        	if (candidate.labelRect.y > bottom)
+        	if (candidate.labelRect.y <= bottom)
         	{
         		candidateLine.add(candidate);
         		bottom = Math.max(bottom, candidate.labelRect.y + candidate.labelRect.height);
@@ -58,21 +58,20 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
         	{
         		candidateLines.add(candidateLine);
         		candidateLine = new ArrayList<PanelSegInfo>();
-        		i++; if (i >= candidates.size()) break;
-            	candidate = candidates.get(i);
                 candidateLine.add(candidate);
                 bottom = candidate.labelRect.y + candidate.labelRect.height;
         	}
         }
         if (candidateLine.size() != 0) candidateLines.add(candidateLine);
 		
-        //Run viterbi for each line
+        //Run beam search for each line
         for (int i = 0; i < candidateLines.size(); i++)
         {
         	candidateLine = candidateLines.get(i);
-        	candidateLine.sort(new LabelRectLeftAscending());
+        	candidateLine.sort(new LabelRectLeftAscending()); //In each line, sort according to their left
         	
-        	
+        	BeamSearch1 search1 = new BeamSearch1(500, candidateLine);
+        	search1.Search();
         }
 	}
 	
