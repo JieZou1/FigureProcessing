@@ -63,16 +63,10 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
         	}
         }
         if (candidateLine.size() != 0) candidateLines.add(candidateLine);
-		
-        //Run beam search for each line
-        for (int i = 0; i < candidateLines.size(); i++)
-        {
-        	candidateLine = candidateLines.get(i);
-        	candidateLine.sort(new LabelRectLeftAscending()); //In each line, sort according to their left
-        	
-        	BeamSearch1 search1 = new BeamSearch1(500, candidateLine);
-        	search1.Search();
-        }
+
+        //Run beam search on these lines
+        BeamSearch1 beamSearch1 = new BeamSearch1(500, candidateLines);
+        beamSearch1.Search();
 	}
 	
 	
