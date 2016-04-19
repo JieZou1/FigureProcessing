@@ -306,7 +306,7 @@ public class PanelSegEval
 	
 	/**
 	 * Panel Segmentation for a figure
-	 * @param path The figure file to be segmented.
+	 * @param i The index of the figure file to be segmented.
 	 * @throws IOException 
 	 */
 	void segment(int i) throws IOException 
