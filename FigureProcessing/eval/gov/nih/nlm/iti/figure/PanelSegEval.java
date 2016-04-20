@@ -487,8 +487,8 @@ public class PanelSegEval
 
 		System.out.println("Start Segmentation ... ");
 		eval.startTime = System.currentTimeMillis();
-		//eval.segSingleThread();
-		eval.segMultiThreads(10);
+		eval.segSingleThread();
+		//eval.segMultiThreads(10);
 		eval.endTime = System.currentTimeMillis();
 
 //		System.out.println("Save segmentation results ... ");

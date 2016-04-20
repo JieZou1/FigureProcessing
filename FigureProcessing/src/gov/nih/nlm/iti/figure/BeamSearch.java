@@ -1,14 +1,17 @@
 package gov.nih.nlm.iti.figure;
 
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
-class BeamSearch1 
+import org.apache.commons.lang3.ArrayUtils;
+
+class BeamSearch 
 {
 	class BeamNode
 	{
-		double normalizedProb; 		//Use this to sort different paths
+		double logProb; 		//Use this to sort different paths
 		ArrayList<Integer> labelIndexes = new ArrayList<Integer>();	//The path of label indexes to reach this node.
 		ArrayList<Character> labels = new ArrayList<Character>();	//The path of labels to reach this node. For check IsLegal and for manually examine the path
 		ArrayList<PanelSegInfo> patchs = new ArrayList<PanelSegInfo>();	//The path of patches to reach this node. For check IsLegal and for manually examine the path
@@ -23,16 +26,16 @@ class BeamSearch1
 		@Override
 		public int compare(BeamNode o1, BeamNode o2) 
 		{
-			double diff = o2.normalizedProb - o1.normalizedProb;
+			double diff = o2.logProb - o1.logProb;
 			if (diff > 0) return 1;
 			else if (diff == 0) return 0;
 			else return -1;
 		}		
 	}
 
-	class BeamLine
+	class BeamLines
 	{
-		double normalizedProb; 		//Use this to sort different paths
+		double logProb; 		//Use this to sort different paths
 		ArrayList<ArrayList<Character>> labels = new ArrayList<ArrayList<Character>>();	//The path of labels to reach this node. For check IsLegal and for manually examine the path
 		ArrayList<ArrayList<PanelSegInfo>> patchs = new ArrayList<ArrayList<PanelSegInfo>>();	//The path of patches to reach this node. For check IsLegal and for manually examine the path
 	}
@@ -41,12 +44,12 @@ class BeamSearch1
 	 * Comparator for sorting BeamLine in reverse order of normalizedProb.
 	 * @author Jie Zou
 	 */
-	class BeamLineDescending implements Comparator<BeamLine>
+	class BeamLineDescending implements Comparator<BeamLines>
 	{
 		@Override
-		public int compare(BeamLine o1, BeamLine o2) 
+		public int compare(BeamLines o1, BeamLines o2) 
 		{
-			double diff = o2.normalizedProb - o1.normalizedProb;
+			double diff = o2.logProb - o1.logProb;
 			if (diff > 0) return 1;
 			else if (diff == 0) return 0;
 			else return -1;
@@ -61,21 +64,28 @@ class BeamSearch1
 	
 	ArrayList<ArrayList<PanelSegInfo>> lines; //The patch lines to be labeled (beam searched).
 	ArrayList<ArrayList<PanelSegInfo>> linesReverse; //The patch lines to be labeled (beam searched).
-	BeamNode[][][] linePaths;
-	BeamNode[][][] lineReversePaths;
+	BeamNode[][] lineCandidatePaths;	//The candidate paths collected by beam search in each line.
+	BeamLines[][] beamLinePaths;			//The final path candidate after combining lines
+
 	
-	public BeamSearch1(int beamLength, ArrayList<ArrayList<PanelSegInfo>> lines) 
+	public BeamSearch(int beamLength) 
 	{
-		this.beamLength = beamLength;
-		
-		this.nLines = lines.size();
+		this.beamLength = beamLength;		
+	}
+
+	public BeamLines Search(ArrayList<ArrayList<PanelSegInfo>> lns, boolean vertical)
+	{
+		this.nLines = lns.size();
 		this.lines = new ArrayList<ArrayList<PanelSegInfo>>();
 		this.linesReverse = new ArrayList<ArrayList<PanelSegInfo>>();
 		
 		for (int i = 0; i < nLines; i++) 
 		{
-			ArrayList<PanelSegInfo> line = lines.get(i);
-        	line.sort(new LabelRectLeftAscending()); //In each line, sort according to their left
+			ArrayList<PanelSegInfo> line = lns.get(i);
+			if (vertical)
+	        	line.sort(new LabelRectTopAscending()); //In each line, sort according to their Top
+			else				
+				line.sort(new LabelRectLeftAscending()); //In each line, sort according to their Left
         	
         	this.lines.add(line);
         
@@ -87,52 +97,23 @@ class BeamSearch1
 			
 		this.labelLength = lines.get(0).get(0).labelProbs.length;
 		
-		//Set label Transition Prob, in our case, we prohibit smaller letter,
-		//We have the highest expectation to see the next label, and gradually smaller expectation to see the later letter.
-//		if (labelTransProbs == null)
-//		{
-//			labelTransProbs = new double[labelLength][];	//Last one is transition to "Non-Label" patch
-//			for (int i = 0; i < labelLength; i++)
-//			{
-//				labelTransProbs[i] = new double[labelLength];
-//				if (i == labelLength - 1)
-//				{	//Uniform distrubution is used for transition from "Non-Label" to all other labels.
-//					for (int j = 0; j < labelLength; j++)	labelTransProbs[i][j] = 1.0/labelLength;
-//				}
-//				else
-//				{
-//					char ch = PanelSeg.labelToReg[i]; 
-//					for (int j = 0; j < labelLength; j++)
-//					{
-//						char nextCh = PanelSeg.labelToReg[j];
-//
-//						
-//						
-//						if (j <= i) labelTransProbs[i][j] = 0; //The label can only increase in a line
-//						else if (j == i + 1) labelTransProbs[i][j] = 1; //The next label has the highest prob
-//						else if (j == labelLength - 1) labelTransProbs[i][j] = 1; //Transition to "Non-Label" is also high
-//						else labelTransProbs[i][j] = 1.0/(j - i);
-//					}
-//				}
-//			}
-//		}
-	}
-
-	public BeamLine Search()
-	{
-		linePaths = new BeamNode[nLines][][];
-		lineReversePaths = new BeamNode[nLines][][];
+		lineCandidatePaths = new BeamNode[nLines][];
         for (int i = 0; i < nLines; i++)
         {
         	ArrayList<PanelSegInfo> line = lines.get(i);
-        	if (line.size() == 1)
+        	if (i == 0 || line.size() == 1)
         	{	//If there is only one patch in the line, we don't need to try reverse.
-            	linePaths[i] = Search(lines.get(i));
+        		//We also assume the first line has to be from left to right
+        		BeamNode[][] path = Search(lines.get(i));
+        		lineCandidatePaths[i] = path[path.length-1];
         	}
         	else
         	{
-            	linePaths[i] = Search(lines.get(i));
-            	lineReversePaths[i] = Search(linesReverse.get(i));
+        		BeamNode[][] path = Search(lines.get(i));
+        		BeamNode[][] reversePath = Search(linesReverse.get(i));
+
+        		lineCandidatePaths[i] = ArrayUtils.addAll(path[path.length-1], reversePath[reversePath.length-1]); 
+    			Arrays.sort(lineCandidatePaths[i], new BeamNodeDescending());
         	}
         }
         
@@ -153,7 +134,7 @@ class BeamSearch1
 				for (int j = 0; j < labelLength; j++)
 				{
 					BeamNode bn = new BeamNode();
-					bn.normalizedProb = patch.labelProbs[j];
+					bn.logProb = Math.log(patch.labelProbs[j]);
 					bn.labelIndexes.add(j);
 					bn.patchs.add(patch);
 					if (j < PanelSeg.labelToReg.length)	bn.labels.add(PanelSeg.labelToReg[j]);
@@ -169,9 +150,10 @@ class BeamSearch1
 					for (int j = 0; j < labelLength; j++)
 					{
 						BeamNode bn = new BeamNode();
-						bn.normalizedProb = patch.labelProbs[j] * lastBeam[k].normalizedProb;
+						bn.logProb = Math.log(patch.labelProbs[j]) + lastBeam[k].logProb;
 						bn.labelIndexes.addAll(lastBeam[k].labelIndexes);		bn.labelIndexes.add(j);	
-						bn.patchs.add(patch);
+						bn.patchs.addAll(lastBeam[k].patchs); bn.patchs.add(patch);
+						bn.labels.addAll(lastBeam[k].labels); 
 						if (j < PanelSeg.labelToReg.length)	bn.labels.add(PanelSeg.labelToReg[j]);
 						else bn.labels.add('#'); //We use # to indicate no-label patch.
 						
@@ -182,9 +164,6 @@ class BeamSearch1
 			
 			//Normalize candidates prob
 			BeamNode[] candidatesArray = candidates.toArray(new BeamNode[0]);
-			double sum = 0;
-			for (int k = 0; k < candidatesArray.length; k++)	sum += candidatesArray[k].normalizedProb;
-			for (int k = 0; k < candidatesArray.length; k++)	candidatesArray[k].normalizedProb /= sum;
 			Arrays.sort(candidatesArray, new BeamNodeDescending());
 
 			beamNodePaths[i] = candidatesArray.length < beamLength ? candidatesArray: Arrays.copyOfRange(candidatesArray, 0, beamLength);			
@@ -192,20 +171,20 @@ class BeamSearch1
 		return beamNodePaths;
 	}
 
-	private BeamLine SearchLines()
+	private BeamLines SearchLines()
 	{
-		BeamLine[][] beamLinePaths = new BeamLine[nLines][];
+		beamLinePaths = new BeamLines[nLines][];
 		
 		for (int i = 0; i < nLines; i++)
 		{
-			ArrayList<BeamLine> candidates = new ArrayList<BeamLine>();
+			ArrayList<BeamLines> candidates = new ArrayList<BeamLines>();
 			if (i == 0)
-			{	//We assume the first line must be from left to right, so we don't include linePathsReverse
-				BeamNode[] paths = linePaths[i][linePaths[i].length - 1]; 
+			{	
+				BeamNode[] paths = lineCandidatePaths[i]; 
 				for (int j = 0; j < paths.length; j++)
 				{
-					BeamLine bl = new BeamLine();
-					bl.normalizedProb = paths[j].normalizedProb;
+					BeamLines bl = new BeamLines();
+					bl.logProb = paths[j].logProb;
 					bl.labels.add(paths[j].labels);
 					bl.patchs.add(paths[j].patchs);
 					candidates.add(bl);
@@ -213,14 +192,14 @@ class BeamSearch1
 			}
 			else
 			{
-				BeamLine[] lastLine = beamLinePaths[i-1];		int n = lastLine.length;				
-				BeamNode[] paths = linePaths[i][linePaths[i].length - 1]; 
+				BeamLines[] lastLine = beamLinePaths[i-1];		int n = lastLine.length;				
+				BeamNode[] paths = lineCandidatePaths[i]; 
 				for (int k = 0; k < n; k++)
 				{
 					for (int j = 0; j < paths.length; j++)
 					{
-						BeamLine bl = new BeamLine();
-						bl.normalizedProb = paths[j].normalizedProb * lastLine[k].normalizedProb;
+						BeamLines bl = new BeamLines();
+						bl.logProb = paths[j].logProb + lastLine[k].logProb;
 						bl.labels.addAll(lastLine[k].labels); bl.labels.add(paths[j].labels);
 						bl.patchs.addAll(lastLine[k].patchs); bl.patchs.add(paths[j].patchs);
 						
@@ -230,14 +209,13 @@ class BeamSearch1
 			}
 			
 			//Normalize candidates prob
-			BeamLine[] candidatesArray = candidates.toArray(new BeamLine[0]);
-			double sum = 0;
-			for (int k = 0; k < candidatesArray.length; k++)	sum += candidatesArray[k].normalizedProb;
-			for (int k = 0; k < candidatesArray.length; k++)	candidatesArray[k].normalizedProb /= sum;
+			BeamLines[] candidatesArray = candidates.toArray(new BeamLines[0]);
 			Arrays.sort(candidatesArray, new BeamLineDescending());
 
 			beamLinePaths[i] = candidatesArray.length < beamLength ? candidatesArray: Arrays.copyOfRange(candidatesArray, 0, beamLength);			
 		}
+		
+		if (beamLinePaths[beamLinePaths.length-1].length == 0) return null;
 		
 		return beamLinePaths[beamLinePaths.length-1][0];
 	}
@@ -262,7 +240,7 @@ class BeamSearch1
 		return IsLegal(labels, labelPatches);
 	}
 
-	private boolean IsLegal(BeamLine bl)
+	private boolean IsLegal(BeamLines bl)
 	{
 		//Get label sequence
 		ArrayList<Character> labels = new ArrayList<Character>();
@@ -283,9 +261,15 @@ class BeamSearch1
 		return IsLegal(labels, labelPatches);
 	}
 
+	/**
+	 * Check whether the label sequence is legitimate.
+	 * @param labels
+	 * @param patches
+	 * @return
+	 */
 	private boolean IsLegal(ArrayList<Character> labels, ArrayList<PanelSegInfo> patches)
 	{
-		//Check Label Sequence
+		//1. Check Label Sequence
 		char prevCh = labels.get(0);
 		for (int i = 1; i < labels.size(); i++)
 		{
@@ -294,7 +278,16 @@ class BeamSearch1
 			prevCh = currCh;
 		}
 		
-		//Check overlapping Patches
+		//2. Check overlapping Patches, we don't allow the label patches to be overlapping
+		for (int i = 0; i < patches.size(); i++)
+		{
+			Rectangle rect1 = patches.get(i).labelRect;
+			for (int j = i+1; j < patches.size(); j++)
+			{
+				Rectangle rect2 = patches.get(j).labelRect;
+				if (rect1.intersects(rect2)) return false;
+			}
+		}
 		
 		return true;
 	}
