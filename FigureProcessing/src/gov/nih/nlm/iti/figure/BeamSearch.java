@@ -289,6 +289,19 @@ class BeamSearch
 			}
 		}
 		
+		//3. If 'A' or 'a' is in the labels, all other patches must not be at the top of left of 'a' or 'A'
+		char firstCh = labels.get(0);
+		if (firstCh == 'a' || firstCh == 'A')
+		{
+			Rectangle aRectangle = patches.get(0).labelRect;
+			for (int i = 1; i < patches.size(); i++)
+			{
+				Rectangle rectangle = patches.get(i).labelRect;
+				if (rectangle.y + rectangle.height < aRectangle.y) return false;
+				if (rectangle.x + rectangle.width < aRectangle.x) return false;
+			}
+		}
+		
 		return true;
 	}
 }
