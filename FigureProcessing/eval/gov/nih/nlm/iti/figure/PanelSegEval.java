@@ -230,7 +230,7 @@ public class PanelSegEval
 					double area_intersect = intersect.isEmpty() ? 0 : intersect.width * intersect.height;
 					double area_gt = gtPanel.labelRect.width * gtPanel.labelRect.height;
 					double area_auto = autoPanel.labelRect.width * autoPanel.labelRect.height;
-					if (chAuto == chGt && area_intersect > area_gt / 2 && area_intersect > area_auto / 2)  //Label matches and also the intersection to gt is at least half of gt region and half of itself.
+					if (chAuto == chGt && area_intersect > area_gt / 4 && area_intersect > area_auto / 4)  //Label matches and also the intersection to gt is at least half of gt region and half of itself.
 					{
 						found = true; break;
 					}
@@ -261,7 +261,7 @@ public class PanelSegEval
 					double area_intersect = intersect.isEmpty() ? 0 : intersect.width * intersect.height;
 					double area_gt = gtPanel.labelRect.width * gtPanel.labelRect.height;
 					double area_auto = autoPanel.labelRect.width * autoPanel.labelRect.height;
-					if (chAuto == chGt && area_intersect > area_gt / 2 && area_intersect > area_auto / 2)  //Label matches and also the intersection to gt is at least half of gt region and half of itself.
+					if (chAuto == chGt && area_intersect > area_gt / 4 && area_intersect > area_auto / 4)  //Label matches and also the intersection to gt is at least half of gt region and half of itself.
 					{
 						found = true; break;
 					}
@@ -318,6 +318,7 @@ public class PanelSegEval
     		pw.println("Total False Alarm: " + totalFalseAlarm);
     		for (int i = 0; i < missingLabels.size(); i++)
     		{
+    			if (missingLabels.get(i).size() == 0 && falseAlarmLabels.get(i).size() == 0) continue; //All correct, we don't care.
     			pw.println(matchedIDs.get(i));
     			pw.print("\t" + "GT Labels:\t");	for (int k = 0; k < gtLabels.get(i).size(); k++) pw.print(gtLabels.get(i).get(k) + " "); pw.println();
     			pw.print("\t" + "Auto Labels:\t");	for (int k = 0; k < autoLabels.get(i).size(); k++) pw.print(autoLabels.get(i).get(k) + " "); pw.println();
