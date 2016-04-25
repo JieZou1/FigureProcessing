@@ -172,32 +172,50 @@ public class PanelSegEval
 	 */
 	private void EvaluateLabelRecog()
 	{
-		char lastChar = Character.toLowerCase(PanelSeg.labelToDetect[PanelSeg.labelToDetect.length-1]), firstChar = Character.toLowerCase(PanelSeg.labelToDetect[0]);
-		int n = lastChar - firstChar + 1; 
+		char 	lastChar = Character.toLowerCase(PanelSeg.labelToDetect[PanelSeg.labelToDetect.length-1]), 
+				firstChar = Character.toLowerCase(PanelSeg.labelToDetect[0]);
+		int n = lastChar - firstChar + 1;
+		
 		int[] countIndividualLabelGT = new int[n];
 		int[] countIndividualLabelAuto = new int[n];
 		int[] countIndividualLabelCorrect = new int[n];
+		ArrayList<ArrayList<String>> autoLabels = new ArrayList<ArrayList<String>>();
+		ArrayList<ArrayList<String>> gtLabels = new ArrayList<ArrayList<String>>();
+		ArrayList<ArrayList<String>> missingLabels = new ArrayList<ArrayList<String>>();
+		ArrayList<ArrayList<String>> falseAlarmLabels = new ArrayList<ArrayList<String>>();
 		
 		for (int i = 0; i < matchedIDs.size(); i++)
 		{
+			//count Auto results
 			ArrayList<PanelSegInfo> auto = matchedAutoPanels.get(i);
+			ArrayList<String> autoLabel = new ArrayList<String>();
 			for (int j = 0; j < auto.size(); j++)
 			{
 				PanelSegInfo panel = auto.get(j);
 				char ch = Character.toLowerCase(panel.panelLabel.charAt(0));			if (ch > lastChar) continue;
+				autoLabel.add(""+ch);
 				int labelArrayIndex = ch - firstChar;
 				countIndividualLabelAuto[labelArrayIndex]++;
 			}
+			autoLabels.add(autoLabel);
 
+			//count GT results
 			ArrayList<PanelSegInfo> gt = matchedGtPanels.get(i);
+			ArrayList<String> gtLabel = new ArrayList<String>();
 			for (int j = 0; j < gt.size(); j++)
 			{
 				PanelSegInfo panel = gt.get(j);
+				if (panel.labelRect == null) continue; //In this panel of GT data, there is no label.
+				
 				char ch = Character.toLowerCase(panel.panelLabel.charAt(0));			if (ch > lastChar) continue;
+				gtLabel.add(""+ch);
 				int labelArrayIndex = ch - firstChar;
 				countIndividualLabelGT[labelArrayIndex]++;
 			}
+			gtLabels.add(gtLabel);
 			
+			//Match Auto to GT to find false alarms, 
+			ArrayList<String> falseAlarmLabel = new ArrayList<String>();
 			for (int j = 0; j < auto.size(); j++)
 			{
 				PanelSegInfo autoPanel = auto.get(j); boolean found = false;
@@ -205,6 +223,8 @@ public class PanelSegEval
 				for (int k = 0; k < gt.size(); k++)
 				{
 					PanelSegInfo gtPanel = gt.get(k);
+					if (gtPanel.labelRect == null) continue; //In this panel of GT data, there is no label.
+					
 					char chGt = Character.toLowerCase(gtPanel.panelLabel.charAt(0));	//if (chGt > lastChar) continue;
 					Rectangle intersect = gtPanel.labelRect.intersection(autoPanel.labelRect);
 					double area_intersect = intersect.isEmpty() ? 0 : intersect.width * intersect.height;
@@ -220,7 +240,40 @@ public class PanelSegEval
 					int labelArrayIndex = chAuto - firstChar;
 					countIndividualLabelCorrect[labelArrayIndex]++;
 				}
+				else falseAlarmLabel.add("" + chAuto);
 			}
+			falseAlarmLabels.add(falseAlarmLabel);
+			
+			//Match GT to Auto to find missing 
+			ArrayList<String> missingLabel = new ArrayList<String>();
+			for (int j = 0; j < gt.size(); j++)
+			{
+				PanelSegInfo gtPanel = gt.get(j); boolean found = false;
+				if (gtPanel.labelRect == null) continue; //In this panel of GT data, there is no label.
+				
+				char chGt = Character.toLowerCase(gtPanel.panelLabel.charAt(0));
+				for (int k = 0; k < auto.size(); k++)
+				{
+					PanelSegInfo autoPanel = auto.get(k);
+					
+					char chAuto = Character.toLowerCase(autoPanel.panelLabel.charAt(0));	//if (chGt > lastChar) continue;
+					Rectangle intersect = autoPanel.labelRect.intersection(gtPanel.labelRect);
+					double area_intersect = intersect.isEmpty() ? 0 : intersect.width * intersect.height;
+					double area_gt = gtPanel.labelRect.width * gtPanel.labelRect.height;
+					double area_auto = autoPanel.labelRect.width * autoPanel.labelRect.height;
+					if (chAuto == chGt && area_intersect > area_gt / 2 && area_intersect > area_auto / 2)  //Label matches and also the intersection to gt is at least half of gt region and half of itself.
+					{
+						found = true; break;
+					}
+				}
+				if (found)
+				{
+//					int labelArrayIndex = chGt - firstChar;
+//					countIndividualLabelCorrect[labelArrayIndex]++;
+				}
+				else missingLabel.add("" + chGt);
+			}
+			missingLabels.add(missingLabel);
 		}
 		
 		int countTotalLabelsGT = IntStream.of(countIndividualLabelGT).sum();
@@ -253,6 +306,23 @@ public class PanelSegEval
         		precision = (float)countCorrect / countAuto; precision = (float) (((int)(precision*1000+0.5))/10.0);
         		recall = (float)countCorrect / countGT; recall = (float) (((int)(recall*1000+0.5))/10.0);
         		pw.println(item + "\t" + countGT + "\t" + countAuto + "\t" + countCorrect + "\t" + precision + "\t" + recall);
+    		}
+
+    		pw.println();
+    		
+    		//Missing Labels:
+    		int totalMissing = 0, totalFalseAlarm = 0;
+    		for (int i = 0; i < missingLabels.size(); i++) totalMissing += missingLabels.get(i).size(); 
+    		for (int i = 0; i < falseAlarmLabels.size(); i++) totalFalseAlarm += falseAlarmLabels.get(i).size(); 
+    		pw.println("Total Missing: " + totalMissing);
+    		pw.println("Total False Alarm: " + totalFalseAlarm);
+    		for (int i = 0; i < missingLabels.size(); i++)
+    		{
+    			pw.println(matchedIDs.get(i));
+    			pw.print("\t" + "GT Labels:\t");	for (int k = 0; k < gtLabels.get(i).size(); k++) pw.print(gtLabels.get(i).get(k) + " "); pw.println();
+    			pw.print("\t" + "Auto Labels:\t");	for (int k = 0; k < autoLabels.get(i).size(); k++) pw.print(autoLabels.get(i).get(k) + " "); pw.println();
+    			pw.print("\t" + "Missing Labels:\t");	for (int k = 0; k < missingLabels.get(i).size(); k++) pw.print(missingLabels.get(i).get(k) + " "); pw.println();
+    			pw.print("\t" + "False Alarm Labels:\t");	for (int k = 0; k < falseAlarmLabels.get(i).size(); k++) pw.print(falseAlarmLabels.get(i).get(k) + " "); pw.println();
     		}
     		
     	} catch (FileNotFoundException e) {
@@ -487,8 +557,8 @@ public class PanelSegEval
 
 		System.out.println("Start Segmentation ... ");
 		eval.startTime = System.currentTimeMillis();
-		eval.segSingleThread();
-		//eval.segMultiThreads(10);
+		//eval.segSingleThread();
+		eval.segMultiThreads(10);
 		eval.endTime = System.currentTimeMillis();
 
 //		System.out.println("Save segmentation results ... ");

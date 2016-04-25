@@ -206,38 +206,40 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 				}
 			}
 			
-			if (found) continue;
+			if (found)	continue;
+			
+			throw new Exception("Load Ground Truth Error: Not able to find matching Panel for Label " + labelName + " in " + gt_xml_file + "!");
 			
 			//Not found by matching labels, we check with intersections
-			Rectangle labelRect = labelRects.get(i);
-			for (int j = 0; j < panels.size(); j++)
-			{
-				Rectangle panelRect = panels.get(j).panelRect;
-				if (panelRect.intersects(labelRect))
-				{
-					panels.get(j).labelRect = labelRect;
-					panels.get(j).panelLabel = labelName;
-					found = true;
-					break;
-				}
-			}
-			
-			if (found) continue;
-			
-			//Not found by matching labels, and checking intersections, we check with union
-			int min_area = Integer.MAX_VALUE; int min_j = -1;
-			for (int j = 0; j < panels.size(); j++)
-			{
-				Rectangle panelRect = panels.get(j).panelRect;
-				Rectangle union = panelRect.union(labelRect);
-				int area = union.width * union.height;
-				if (area < min_area)
-				{
-					min_area = area; min_j = j;
-				}
-			}
-			panels.get(min_j).labelRect = labelRect;
-			panels.get(min_j).panelLabel = labelName;
+//			Rectangle labelRect = labelRects.get(i);
+//			for (int j = 0; j < panels.size(); j++)
+//			{
+//				Rectangle panelRect = panels.get(j).panelRect;
+//				if (panelRect.intersects(labelRect))
+//				{
+//					panels.get(j).labelRect = labelRect;
+//					panels.get(j).panelLabel = labelName;
+//					found = true;
+//					break;
+//				}
+//			}
+//			
+//			if (found) continue;
+//			
+//			//Not found by matching labels, and checking intersections, we check with union
+//			int min_area = Integer.MAX_VALUE; int min_j = -1;
+//			for (int j = 0; j < panels.size(); j++)
+//			{
+//				Rectangle panelRect = panels.get(j).panelRect;
+//				Rectangle union = panelRect.union(labelRect);
+//				int area = union.width * union.height;
+//				if (area < min_area)
+//				{
+//					min_area = area; min_j = j;
+//				}
+//			}
+//			panels.get(min_j).labelRect = labelRect;
+//			panels.get(min_j).panelLabel = labelName;
 		}
 		
 		return panels;
