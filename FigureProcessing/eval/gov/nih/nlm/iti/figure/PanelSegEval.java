@@ -64,6 +64,7 @@ public class PanelSegEval
 				{
 				case "Jaylene": segmentors.add(new PanelSegJaylene());			break;
 				case "Santosh": segmentors.add(new PanelSegSantosh());			break;
+				case "Daekeun": segmentors.add(new PanelSegDaekeun());			break;
 				case "LabelRegMSER": segmentors.add(new PanelSegLabelRegMSER());break;
 				case "LabelRegHoG": segmentors.add(new PanelSegLabelRegHoG());break;
 				case "LabelRegHoGSvm": segmentors.add(new PanelSegLabelRegHoGSvm());break;
@@ -192,6 +193,7 @@ public class PanelSegEval
 			for (int j = 0; j < auto.size(); j++)
 			{
 				PanelSegInfo panel = auto.get(j);
+				if (panel.labelRect == null) continue; //It is possible that there is no label.
 				char ch = Character.toLowerCase(panel.panelLabel.charAt(0));			if (ch > lastChar) continue;
 				autoLabel.add(""+ch);
 				int labelArrayIndex = ch - firstChar;
@@ -219,6 +221,7 @@ public class PanelSegEval
 			for (int j = 0; j < auto.size(); j++)
 			{
 				PanelSegInfo autoPanel = auto.get(j); boolean found = false;
+				if (autoPanel.labelRect == null) continue; //It is possible no label.
 				char chAuto = Character.toLowerCase(autoPanel.panelLabel.charAt(0));
 				for (int k = 0; k < gt.size(); k++)
 				{
@@ -255,6 +258,7 @@ public class PanelSegEval
 				for (int k = 0; k < auto.size(); k++)
 				{
 					PanelSegInfo autoPanel = auto.get(k);
+					if (autoPanel.labelRect == null) continue; //It is possible no label.
 					
 					char chAuto = Character.toLowerCase(autoPanel.panelLabel.charAt(0));	//if (chGt > lastChar) continue;
 					Rectangle intersect = autoPanel.labelRect.intersection(gtPanel.labelRect);
@@ -391,7 +395,7 @@ public class PanelSegEval
 		System.out.println("Processing "+ i + " "  + filename);
 		segmentor.segment(filename);
 	
-		//synchronized(segmentors)
+		if (segmentor.figure.segmentationResultIndividualLabel != null) 
 		{
 			//Save detected patches
 			for (int k = 0; k < segmentor.figure.segmentationResultIndividualLabel.size(); k++)
@@ -421,7 +425,8 @@ public class PanelSegEval
 					imwrite(resultPatchFile.toString(), patch);
 				}
 			}
-			
+		}
+		{	 	
 			//Save Final Segmentation Result
 			//2.1 Save result in images
 			Mat img_result = segmentor.getSegmentationResultInMat();
@@ -523,6 +528,7 @@ public class PanelSegEval
 			System.out.println("method:");
 			System.out.println("Jaylene		Jaylene's method based on cross uniform band");
 			System.out.println("Santosh		Santosh's method based on long line segments");
+			System.out.println("Daekeun		Daekeun method (Panel Splitter)");
 			System.out.println("LabelRegMSER	MSER method for recognizing Label candidate regions");
 			System.out.println("LabelRegHoG	HoG method for recognizing Label candidate regions");
 			System.out.println("LabelRegHoGSvm	HoG method followed by SVM classification for recognizing Label candidate regions");
@@ -547,6 +553,7 @@ public class PanelSegEval
 		{
 		case "Jaylene": break;
 		case "Santosh": break;
+		case "Daekeun": break;
 		case "LabelRegMSER": break;
 		case "LabelRegHoG": break;
 		case "LabelRegHoGSvm": break;
@@ -558,8 +565,8 @@ public class PanelSegEval
 
 		System.out.println("Start Segmentation ... ");
 		eval.startTime = System.currentTimeMillis();
-		//eval.segSingleThread();
-		eval.segMultiThreads(10);
+		eval.segSingleThread();
+		//eval.segMultiThreads(10);
 		eval.endTime = System.currentTimeMillis();
 
 //		System.out.println("Save segmentation results ... ");
