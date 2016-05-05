@@ -24,10 +24,17 @@ final class PanelSegTrainSvm2SingleVec extends PanelSegTrainMethod
 	{
 		PanelSegTrain segTrain = new PanelSegTrain(method, srcFolder, rstFolder);
 
-		for (int i = 0 ; i < PanelSeg.labelToDetect.length; i++)
+//		for (int i = 0 ; i < PanelSeg.labelToDetect.length; i++)
+//		{
+//			char ch = PanelSeg.labelToDetect[i];
+//			Path path = Character.isLowerCase(ch) ? srcFolder.resolve("svm_model_" + PanelSeg.labelToDetect[i]) : srcFolder.resolve("svm_model_" + PanelSeg.labelToDetect[i] +"_");
+//			segTrain.allPaths.add(path);
+//			segTrain.methods.add(new PanelSegTrainSvm2SingleVec());
+//		}
+
+		for (int i = 0 ; i < PanelSeg.labelsToDetect.length; i++)
 		{
-			char ch = PanelSeg.labelToDetect[i];
-			Path path = Character.isLowerCase(ch) ? srcFolder.resolve("svm_model_" + PanelSeg.labelToDetect[i]) : srcFolder.resolve("svm_model_" + PanelSeg.labelToDetect[i] +"_");
+			Path path = srcFolder.resolve("svm_model_" + PanelSeg.labelsToDetect[i]);
 			segTrain.allPaths.add(path);
 			segTrain.methods.add(new PanelSegTrainSvm2SingleVec());
 		}
@@ -50,7 +57,7 @@ final class PanelSegTrainSvm2SingleVec extends PanelSegTrainMethod
     		pw.println("package gov.nih.nlm.iti.figure;");
     		pw.println();
 
-    		int n = PanelSeg.labelToDetect.length;
+    		int n = PanelSeg.labelsToDetect.length;
     		
     		for (int i = 0; i < n; i++)
     		{
@@ -58,7 +65,7 @@ final class PanelSegTrainSvm2SingleVec extends PanelSegTrainMethod
     			float[] singleVector = method.singleVector;
     			
     			String classname = filename.substring(0, filename.lastIndexOf('.') - 1); 
-    			classname =	Character.isUpperCase(PanelSeg.labelToDetect[i]) ? classname + "_" + PanelSeg.labelToDetect[i] + "_" : classname + "_" + PanelSeg.labelToDetect[i];
+    			classname =	classname + "_" + PanelSeg.labelsToDetect[i];
 
 	            pw.println("final class " + classname);
 	            pw.println("{");

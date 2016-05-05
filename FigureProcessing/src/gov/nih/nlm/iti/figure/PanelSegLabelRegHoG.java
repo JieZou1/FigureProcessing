@@ -42,11 +42,11 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 	
 	public PanelSegLabelRegHoG() 
 	{
-		int n = PanelSeg.labelToDetect.length;		svmModels = new float[n][];
+		int n = PanelSeg.labelsToDetect.length;		svmModels = new float[n][];
 		for (int i = 0; i < n; i++)
 		{
 			String classString = "gov.nih.nlm.iti.figure.PanelSegLabelRegHoGModel_";
-			classString += Character.isUpperCase(PanelSeg.labelToDetect[i]) ?  PanelSeg.labelToDetect[i] + "_" : PanelSeg.labelToDetect[i];
+			classString += PanelSeg.labelsToDetect[i];
 			try {
 				Class<?> cls = Class.forName(classString);
 				Field field = cls.getField("svmModel");
@@ -77,7 +77,7 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 	
 	protected void HoGDetect() 
 	{
-		int n = PanelSeg.labelToDetect.length;
+		int n = PanelSeg.labelsToDetect.length;
 		figure.segmentationResultIndividualLabel = new ArrayList<ArrayList<PanelSegInfo>>();
 		for (int i = 0; i < n; i++) figure.segmentationResultIndividualLabel.add(null);
 		
@@ -87,13 +87,13 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
         int _height = (int)(figure.imageHeight * scale + 0.5);
         Size newSize = new Size(_width, _height);
         Mat imgScaled = new Mat(); resize(figure.imageGray, imgScaled, newSize);
-        Mat imgeScaledInverted = new Mat(); resize(figure.imageGrayInverted, imgeScaledInverted, newSize);
+        //Mat imgeScaledInverted = new Mat(); resize(figure.imageGrayInverted, imgeScaledInverted, newSize);
 		//Mat imgeScaledInverted = subtract(Scalar.all(255), imgScaled).asMat();
 		
-		//for (int i = 0; i < n; i++)
-		for (int i = 0; i <= 6; i++)
+		for (int i = 0; i < n; i++)
+		//for (int i = 0; i <= 6; i++)
 		{
-			char panelLabel = labelToDetect[i];
+			String panelLabelSet = labelsToDetect[i];
 			float[] svmModel = svmModels[i];
 			double minSize = labelMinSizes[i] * scale;
 			double maxSize = labelMaxSizes[i] * scale;
@@ -101,8 +101,8 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 			FloatPointer fp = new FloatPointer(svmModel);			hog.setSVMDetector(new Mat(fp));
 			
 			//Search on original and inverted images (after scaling of course)
-			ArrayList<PanelSegInfo> candidates1 = DetectMultiScale(imgScaled, maxSize, minSize, panelLabel, false);
-			//ArrayList<PanelSegInfo> candidates2 = DetectMultiScale(imgeScaledInverted, maxSize, minSize, panelLabel, true);
+			ArrayList<PanelSegInfo> candidates1 = DetectMultiScale(imgScaled, maxSize, minSize, panelLabelSet, false);
+			//ArrayList<PanelSegInfo> candidates2 = DetectMultiScale(imgeScaledInverted, maxSize, minSize, panelLabelSet, true);
 			
 			ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
 			if (candidates1 != null) candidates.addAll(candidates1);
@@ -127,7 +127,7 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 		}
 	}
 	
-	private ArrayList<PanelSegInfo> DetectMultiScale(Mat img, double maxSize, double minSize, char panelLabel, Boolean inverted)
+	private ArrayList<PanelSegInfo> DetectMultiScale(Mat img, double maxSize, double minSize, String panelLabelSet, Boolean inverted)
 	{
 		ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
 		
@@ -151,7 +151,7 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 			
 			PanelSegInfo segInfo = new PanelSegInfo();
 			segInfo.labelRect = new Rectangle(labelRect.x(), labelRect.y(), labelRect.width(), labelRect.height());
-			segInfo.panelLabel = "" + panelLabel;
+			segInfo.panelLabel = panelLabelSet;
 			segInfo.labelInverted = inverted;
 			segInfo.labelScore = scores[k];
 			

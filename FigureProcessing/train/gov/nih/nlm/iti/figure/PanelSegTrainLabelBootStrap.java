@@ -76,7 +76,7 @@ final class PanelSegTrainLabelBootStrap extends PanelSegTrainMethod
 				resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
 				
 				//Construct filename
-				Path resultPatchFolder = Character.isUpperCase(PanelSeg.labelToDetect[i])? resultFolder.resolve(segInfo.panelLabel + "_") : resultFolder.resolve(segInfo.panelLabel);	
+				Path resultPatchFolder = resultFolder.resolve(segInfo.panelLabel);	
 				if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
 				String resultFilename = imageFilePath.getFileName().toString();
 				int pos = resultFilename.lastIndexOf('.');

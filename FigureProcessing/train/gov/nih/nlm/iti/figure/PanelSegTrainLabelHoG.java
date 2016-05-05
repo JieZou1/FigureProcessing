@@ -50,6 +50,25 @@ final class PanelSegTrainLabelHoG extends PanelSegTrainMethod
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		//Positive samples collected from bootstrapping
+		Path pos1Path = srcFolder.resolve("pos1");
+		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(pos1Path)) 
+		{			
+			for (Path path : dirStrm)
+			{
+				String filename = path.toString();
+				if (!filename.endsWith(".bmp")) continue;
+				segTrain.allPaths.add(path);
+				segTrain.methods.add(new PanelSegTrainLabelHoG());
+				segTrain.flags.add(true);
+			}
+		}
+		catch (IOException e) 
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		//Negative samples
 		Path negPath = srcFolder.resolve("neg");

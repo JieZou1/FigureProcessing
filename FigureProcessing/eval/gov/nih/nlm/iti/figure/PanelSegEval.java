@@ -158,7 +158,7 @@ public class PanelSegEval
 		LoadPanelSegGt();
 		loadPanelSegResult();
 		
-		//Match auto and ground truth image samples (ID's, bascailly their filenames)
+		//Match auto and ground truth image samples (ID's, basically their filenames)
 		matchAutoGt();
 
 		//Evaluate, save the result to evaluationFile
@@ -173,8 +173,8 @@ public class PanelSegEval
 	 */
 	private void EvaluateLabelRecog()
 	{
-		char 	lastChar = Character.toLowerCase(PanelSeg.labelToDetect[PanelSeg.labelToDetect.length-1]), 
-				firstChar = Character.toLowerCase(PanelSeg.labelToDetect[0]);
+		char 	lastChar = Character.toLowerCase(PanelSeg.labelToReg[PanelSeg.labelToReg.length-1]), 
+				firstChar = Character.toLowerCase(PanelSeg.labelToReg[0]);
 		int n = lastChar - firstChar + 1;
 		
 		int[] countIndividualLabelGT = new int[n];
@@ -194,10 +194,13 @@ public class PanelSegEval
 			{
 				PanelSegInfo panel = auto.get(j);
 				if (panel.labelRect == null) continue; //It is possible that there is no label.
-				char ch = Character.toLowerCase(panel.panelLabel.charAt(0));			if (ch > lastChar) continue;
-				autoLabel.add(""+ch);
-				int labelArrayIndex = ch - firstChar;
-				countIndividualLabelAuto[labelArrayIndex]++;
+				for (int k = 0; k < panel.panelLabel.length(); k++)
+				{
+					char ch = Character.toLowerCase(panel.panelLabel.charAt(k));			if (ch > lastChar) continue;
+					autoLabel.add(""+ch);
+					int labelArrayIndex = ch - firstChar;
+					countIndividualLabelAuto[labelArrayIndex]++;
+				}
 			}
 			autoLabels.add(autoLabel);
 
@@ -220,30 +223,34 @@ public class PanelSegEval
 			ArrayList<String> falseAlarmLabel = new ArrayList<String>();
 			for (int j = 0; j < auto.size(); j++)
 			{
-				PanelSegInfo autoPanel = auto.get(j); boolean found = false;
+				PanelSegInfo autoPanel = auto.get(j);
 				if (autoPanel.labelRect == null) continue; //It is possible no label.
-				char chAuto = Character.toLowerCase(autoPanel.panelLabel.charAt(0));
-				for (int k = 0; k < gt.size(); k++)
+				for (int kk = 0; kk < autoPanel.panelLabel.length(); kk++)
 				{
-					PanelSegInfo gtPanel = gt.get(k);
-					if (gtPanel.labelRect == null) continue; //In this panel of GT data, there is no label.
-					
-					char chGt = Character.toLowerCase(gtPanel.panelLabel.charAt(0));	//if (chGt > lastChar) continue;
-					Rectangle intersect = gtPanel.labelRect.intersection(autoPanel.labelRect);
-					double area_intersect = intersect.isEmpty() ? 0 : intersect.width * intersect.height;
-					double area_gt = gtPanel.labelRect.width * gtPanel.labelRect.height;
-					double area_auto = autoPanel.labelRect.width * autoPanel.labelRect.height;
-					if (chAuto == chGt && area_intersect > area_gt / 4 && area_intersect > area_auto / 4)  //Label matches and also the intersection to gt is at least half of gt region and half of itself.
+					boolean found = false;
+					char chAuto = Character.toLowerCase(autoPanel.panelLabel.charAt(kk));
+					for (int k = 0; k < gt.size(); k++)
 					{
-						found = true; break;
+						PanelSegInfo gtPanel = gt.get(k);
+						if (gtPanel.labelRect == null) continue; //In this panel of GT data, there is no label.
+						
+						char chGt = Character.toLowerCase(gtPanel.panelLabel.charAt(0));	//if (chGt > lastChar) continue;
+						Rectangle intersect = gtPanel.labelRect.intersection(autoPanel.labelRect);
+						double area_intersect = intersect.isEmpty() ? 0 : intersect.width * intersect.height;
+						double area_gt = gtPanel.labelRect.width * gtPanel.labelRect.height;
+						double area_auto = autoPanel.labelRect.width * autoPanel.labelRect.height;
+						if (chAuto == chGt && area_intersect > area_gt / 4 && area_intersect > area_auto / 4)  //Label matches and also the intersection to gt is at least half of gt region and half of itself.
+						{
+							found = true; break;
+						}
 					}
+					if (found)
+					{
+						int labelArrayIndex = chAuto - firstChar;
+						countIndividualLabelCorrect[labelArrayIndex]++;
+					}
+					else falseAlarmLabel.add("" + chAuto);
 				}
-				if (found)
-				{
-					int labelArrayIndex = chAuto - firstChar;
-					countIndividualLabelCorrect[labelArrayIndex]++;
-				}
-				else falseAlarmLabel.add("" + chAuto);
 			}
 			falseAlarmLabels.add(falseAlarmLabel);
 			
@@ -260,15 +267,19 @@ public class PanelSegEval
 					PanelSegInfo autoPanel = auto.get(k);
 					if (autoPanel.labelRect == null) continue; //It is possible no label.
 					
-					char chAuto = Character.toLowerCase(autoPanel.panelLabel.charAt(0));	//if (chGt > lastChar) continue;
-					Rectangle intersect = autoPanel.labelRect.intersection(gtPanel.labelRect);
-					double area_intersect = intersect.isEmpty() ? 0 : intersect.width * intersect.height;
-					double area_gt = gtPanel.labelRect.width * gtPanel.labelRect.height;
-					double area_auto = autoPanel.labelRect.width * autoPanel.labelRect.height;
-					if (chAuto == chGt && area_intersect > area_gt / 4 && area_intersect > area_auto / 4)  //Label matches and also the intersection to gt is at least half of gt region and half of itself.
+					for (int kk = 0; kk < autoPanel.panelLabel.length(); kk++)
 					{
-						found = true; break;
+						char chAuto = Character.toLowerCase(autoPanel.panelLabel.charAt(kk));	//if (chGt > lastChar) continue;
+						Rectangle intersect = autoPanel.labelRect.intersection(gtPanel.labelRect);
+						double area_intersect = intersect.isEmpty() ? 0 : intersect.width * intersect.height;
+						double area_gt = gtPanel.labelRect.width * gtPanel.labelRect.height;
+						double area_auto = autoPanel.labelRect.width * autoPanel.labelRect.height;
+						if (chAuto == chGt && area_intersect > area_gt / 4 && area_intersect > area_auto / 4)  //Label matches and also the intersection to gt is at least half of gt region and half of itself.
+						{
+							found = true; break;
+						}
 					}
+					if (found) break;
 				}
 				if (found)
 				{
@@ -565,8 +576,8 @@ public class PanelSegEval
 
 		System.out.println("Start Segmentation ... ");
 		eval.startTime = System.currentTimeMillis();
-		eval.segSingleThread();
-		//eval.segMultiThreads(10);
+		//eval.segSingleThread();
+		eval.segMultiThreads(10);
 		eval.endTime = System.currentTimeMillis();
 
 //		System.out.println("Save segmentation results ... ");
