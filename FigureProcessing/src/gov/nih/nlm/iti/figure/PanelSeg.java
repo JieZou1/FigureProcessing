@@ -36,22 +36,16 @@ enum Orientation { Horizontal, Vertical }
  */
 public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm 
 {
-	static char[] labelToDetect = { 'a','A','b','B','c','d','D','e','E','f','F','g','G','h','H','i','I','j','J','k','l','L','M','N','o','p','Q','R'};	//all possible panel labels
-	static int[] labelMinSizes = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10};	//The minimum side length of panel labels
-	static int[] labelMaxSizes = {70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70};	//The maximum side length of panel labels
-	static int getLabelToDetectIndex(char ch)
-	{
-		for (int i = 0; i < labelToDetect.length; i++)
-		{
-			if (labelToDetect[i] == ch)				return i;
-		}
-		return -1;
-	}
+//	static int[] labelMinSizes = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10};	//The minimum side length of panel labels
+//	static int[] labelMaxSizes = {70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70};	//The maximum side length of panel labels
+	
+	static int labelMinSize = 10;	//The minimum side length of panel labels
+	static int labelMaxSize = 70;	//The maximum side length of panel labels
 
 	static String[] labelsToDetect = {"A", "ad", "BDEFPpR", "bhKk", "CceGOoQ", "fIiJjLlrTt", "gqSs", "HMmNn" };
 	
-	static char[] labelToReg 	 = {'a', 'A', 'b', 'B', 'c', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'p', 'q', 'Q', 'r', 'R', 's', 't', 'T', 'u', 'v', 'w', 'x', 'y', 'Y', 'z'}; //All possible panel labels to recognize
-	static char[] labelToRegTodo = {}; //All possible panel labels to recognize (but not ready yet, To Be Done)
+	static char[] labelToReg 	 = {'a', 'A', 'b', 'B', 'c', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'p', 'Q', 'r', 'R', 's', 't', 'T'}; //All possible panel labels to recognize
+	static char[] labelToRegTodo = {'q', 'u', 'v', 'w', 'x', 'y', 'Y', 'z'}; //All possible panel labels to recognize (but not ready yet, To Be Done)
 	
 	/**
 	 * Some common initialization functions for all extended panel segmentation algorithms, including: <p>

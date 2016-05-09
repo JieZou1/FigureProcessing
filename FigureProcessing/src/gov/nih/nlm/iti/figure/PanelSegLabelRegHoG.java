@@ -95,8 +95,8 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 		{
 			String panelLabelSet = labelsToDetect[i];
 			float[] svmModel = svmModels[i];
-			double minSize = labelMinSizes[i] * scale;
-			double maxSize = labelMaxSizes[i] * scale;
+			double minSize = labelMinSize * scale;
+			double maxSize = labelMaxSize * scale;
 			
 			FloatPointer fp = new FloatPointer(svmModel);			hog.setSVMDetector(new Mat(fp));
 			

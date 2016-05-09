@@ -316,7 +316,7 @@ public class PanelSegEval
 
     		for (int i = 0; i < countIndividualLabelGT.length; i++)
     		{
-    			item = "" + (char)(PanelSeg.labelToDetect[0] + i);
+    			item = "" + (char)(PanelSeg.labelToReg[0] + i);
         		countGT = countIndividualLabelGT[i]; countAuto = countIndividualLabelAuto[i]; countCorrect = countIndividualLabelCorrect[i];
         		precision = (float)countCorrect / countAuto; precision = (float) (((int)(precision*1000+0.5))/10.0);
         		recall = (float)countCorrect / countGT; recall = (float) (((int)(recall*1000+0.5))/10.0);
@@ -406,9 +406,9 @@ public class PanelSegEval
 		System.out.println("Processing "+ i + " "  + filename);
 		segmentor.segment(filename);
 	
+		//Save detected patches
 		if (segmentor.figure.segmentationResultIndividualLabel != null) 
 		{
-			//Save detected patches
 			for (int k = 0; k < segmentor.figure.segmentationResultIndividualLabel.size(); k++)
 			{
 				ArrayList<PanelSegInfo> segmentationResult = segmentor.figure.segmentationResultIndividualLabel.get(k);
@@ -421,12 +421,13 @@ public class PanelSegEval
 					PanelSegInfo segInfo = segmentationResult.get(j);
 					Rectangle rectangle = segInfo.labelRect;
 					
-					Mat patch = segInfo.labelInverted ? AlgorithmEx.cropImage(segmentor.figure.imageGrayInverted, rectangle) : 
-						AlgorithmEx.cropImage(segmentor.figure.imageGray, rectangle);
+					Mat patch = segInfo.labelInverted ? AlgorithmEx.cropImage(segmentor.figure.imageGrayInverted, rectangle) : 	AlgorithmEx.cropImage(segmentor.figure.imageGray, rectangle);
 					resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
 					
 					//Construct filename
-					Path resultPatchFolder = Character.isUpperCase(PanelSeg.labelToDetect[k])? rstFolder.resolve(segInfo.panelLabel + "_") : rstFolder.resolve(segInfo.panelLabel);	
+					Path resultPatchFolder = rstFolder.resolve("Detection");	
+					if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
+					resultPatchFolder = resultPatchFolder.resolve(PanelSeg.labelsToDetect[k]);	
 					if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
 					String resultFilename = path.getFileName().toString();
 					int pos = resultFilename.lastIndexOf('.');
@@ -437,7 +438,31 @@ public class PanelSegEval
 				}
 			}
 		}
-		{	 	
+		//Save Recognized patches
+		if (segmentor.figure.segmentationResult != null) 
+		{
+			for (int k = 0; k < segmentor.figure.segmentationResult.size(); k++)
+			{
+				PanelSegInfo segInfo = segmentor.figure.segmentationResult.get(k);
+				Rectangle rectangle = segInfo.labelRect;
+				
+				Mat patch = segInfo.labelInverted ? AlgorithmEx.cropImage(segmentor.figure.imageGrayInverted, rectangle) : 	AlgorithmEx.cropImage(segmentor.figure.imageGray, rectangle);
+				resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
+				
+				//Construct filename
+				Path resultPatchFolder = rstFolder.resolve("Recognition");	
+				if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
+				resultPatchFolder = resultPatchFolder.resolve(Character.isUpperCase(segInfo.panelLabel.charAt(0)) ? segInfo.panelLabel + "_" : segInfo.panelLabel);	
+				if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
+				String resultFilename = path.getFileName().toString();
+				int pos = resultFilename.lastIndexOf('.');
+				
+				resultFilename = resultFilename.substring(0, pos) + "." + rectangle.toString() + "." + segInfo.labelInverted + ".bmp";
+				Path resultPatchFile = resultPatchFolder.resolve(resultFilename);
+				imwrite(resultPatchFile.toString(), patch);
+			}
+		}
+		{
 			//Save Final Segmentation Result
 			//2.1 Save result in images
 			Mat img_result = segmentor.getSegmentationResultInMat();
