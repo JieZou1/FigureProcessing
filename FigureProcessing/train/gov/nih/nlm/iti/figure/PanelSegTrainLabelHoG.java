@@ -89,26 +89,6 @@ final class PanelSegTrainLabelHoG extends PanelSegTrainMethod
 			e.printStackTrace();
 		}
 		
-//		//Standard Negative samples
-//		//Negative samples
-//		Path neg0Path = srcFolder.resolve("neg0");
-//		try (DirectoryStream<Path> dirStrm = Files.newDirectoryStream(neg0Path)) 
-//		{			
-//			for (Path path : dirStrm)
-//			{
-//				String filename = path.toString();
-//				if (!filename.endsWith(".bmp")) continue;
-//				segTrain.allPaths.add(path);
-//				segTrain.methods.add(new PanelSegTrainLabelHoG());
-//				segTrain.flags.add(false);
-//			}
-//		}
-//		catch (IOException e) 
-//		{
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-		
 		return segTrain;
 	}
 	
