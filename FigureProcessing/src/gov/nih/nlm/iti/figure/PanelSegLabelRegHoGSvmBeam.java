@@ -23,6 +23,8 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 
 		HoGDetect();		//HoG Detection, detected patches are stored in figure.segmentationResultIndividualLabel.
 	
+		mergeDetectedLabelsSimple(); //All detected patches are merged into figure.segmentationResult
+		
 		SvmClassification();	//SVM (RBF kernel) classification of each detected patch in figure.segmentationResultIndividualLabel.
 
 		mergeRecognitionLabelsBeam();
@@ -30,8 +32,6 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 
 	private void mergeRecognitionLabelsBeam() 
 	{
-		mergeDetectedLabelsSimple(); //All detected patches are merged into figure.segmentationResult
-		
 		if (figure.segmentationResult.size() == 0) return;
 		
 		BeamLines horiLines = beamSearchHori();
