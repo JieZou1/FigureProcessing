@@ -21,11 +21,11 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 	{
 		preSegment(image);	//Common initializations for all segmentation method.
 
-		HoGDetect();		//HoG Detection, detected patches are stored in figure.segmentationResultIndividualLabel.
+		HoGDetect();		//HoG Detection, detected patches are stored in figure.hogDetectionResult.
 	
 		mergeDetectedLabelsSimple(); //All detected patches are merged into figure.segmentationResult
 		
-		SvmClassification();	//SVM (RBF kernel) classification of each detected patch in figure.segmentationResultIndividualLabel.
+		SvmClassification();	//SVM (RBF kernel) classification of each detected patch in figure.segmentationResult.
 
 		mergeRecognitionLabelsBeam();
 	}
@@ -41,13 +41,11 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 		figure.segmentationResult = new ArrayList<PanelSegInfo>();
 		
 		if (horiLines == null && vertLines == null) return;
+		
 		BeamLines lines = null;
-		if (horiLines == null)
-			lines = vertLines;
-		else if (vertLines == null)
-			lines = horiLines;
-		else 
-			lines = horiLines.logProb >= vertLines.logProb ? horiLines : vertLines;
+		if (horiLines == null)			lines = vertLines;
+		else if (vertLines == null)		lines = horiLines;
+		else 							lines = horiLines.logProb >= vertLines.logProb ? horiLines : vertLines;
 		
 		for (int i = 0; i < lines.labels.size(); i++)
 		{
@@ -94,8 +92,8 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
         if (candidateLine.size() != 0) candidateLines.add(candidateLine);
 
         //Run beam search on these lines
-        BeamSearch beamSearch1 = new BeamSearch(500);
-        BeamLines path = beamSearch1.Search(candidateLines, false);
+        BeamSearch beam_search = new BeamSearch(500);
+        BeamLines path = beam_search.search(candidateLines, false);
         
         return path;
 	}
@@ -103,7 +101,7 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 	private BeamLines beamSearchVert()
 	{
 		ArrayList<PanelSegInfo> candidates = figure.segmentationResult;
-        candidates.sort(new LabelRectLeftAscending()); //Sort detected patches according to their top
+        candidates.sort(new LabelRectLeftAscending()); //Sort detected patches according to their left
 
         //Break them into lines
         ArrayList<ArrayList<PanelSegInfo>> candidateLines = new ArrayList<ArrayList<PanelSegInfo>>();
@@ -130,8 +128,8 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
         if (candidateLine.size() != 0) candidateLines.add(candidateLine);
 
         //Run beam search on these lines
-        BeamSearch beamSearch1 = new BeamSearch(500);
-        BeamLines path = beamSearch1.Search(candidateLines, true);
+        BeamSearch beam_search = new BeamSearch(500);
+        BeamLines path = beam_search.search(candidateLines, true);
         
         return path;
 	}

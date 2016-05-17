@@ -32,9 +32,9 @@ final class PanelSegTrainSvm2SingleVec extends PanelSegTrainMethod
 //			segTrain.methods.add(new PanelSegTrainSvm2SingleVec());
 //		}
 
-		for (int i = 0 ; i < PanelSeg.labelsToDetect.length; i++)
+		for (int i = 0 ; i < PanelSegLabelRegHoG.labelSetsHOG.length; i++)
 		{
-			Path path = srcFolder.resolve("svm_model_" + PanelSeg.labelsToDetect[i]);
+			Path path = srcFolder.resolve("svm_model_" + PanelSegLabelRegHoG.labelSetsHOG[i]);
 			segTrain.allPaths.add(path);
 			segTrain.methods.add(new PanelSegTrainSvm2SingleVec());
 		}
@@ -57,7 +57,7 @@ final class PanelSegTrainSvm2SingleVec extends PanelSegTrainMethod
     		pw.println("package gov.nih.nlm.iti.figure;");
     		pw.println();
 
-    		int n = PanelSeg.labelsToDetect.length;
+    		int n = PanelSegLabelRegHoG.labelSetsHOG.length;
     		
     		for (int i = 0; i < n; i++)
     		{
@@ -65,7 +65,7 @@ final class PanelSegTrainSvm2SingleVec extends PanelSegTrainMethod
     			float[] singleVector = method.singleVector;
     			
     			String classname = filename.substring(0, filename.lastIndexOf('.') - 1); 
-    			classname =	classname + "_" + PanelSeg.labelsToDetect[i];
+    			classname =	classname + "_" + PanelSegLabelRegHoG.labelSetsHOG[i];
 
 	            pw.println("final class " + classname);
 	            pw.println("{");

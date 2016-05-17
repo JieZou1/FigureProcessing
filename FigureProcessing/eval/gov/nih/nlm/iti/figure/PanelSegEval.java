@@ -139,7 +139,7 @@ public class PanelSegEval
 		gtPanels = new ArrayList<ArrayList<PanelSegInfo>>();		
 		for (int i = 0; i < gtXMLPaths.size(); i++)
 		{
-			ArrayList<PanelSegInfo> panels = PanelSeg.LoadPanelSegGt(gtXMLPaths.get(i));
+			ArrayList<PanelSegInfo> panels = PanelSeg.loadPanelSegGt(gtXMLPaths.get(i));
 			gtPanels.add(panels);
 		}
 	}
@@ -400,18 +400,18 @@ public class PanelSegEval
 		Path path = allPaths.get(i);		PanelSeg segmentor = segmentors.get(i);
 		
 		String filename = path.toString();
-//		if (!filename.endsWith("1471-2474-12-251-4.jpg"))
+//		if (!filename.endsWith("1471-2474-7-36-1.jpg"))
 //			return;
 		
 		System.out.println("Processing "+ i + " "  + filename);
 		segmentor.segment(filename);
 	
 		//Save detected patches
-		if (segmentor.figure.segmentationResultIndividualLabel != null) 
+		if (segmentor.figure.hogDetectionResult != null) 
 		{
-			for (int k = 0; k < segmentor.figure.segmentationResultIndividualLabel.size(); k++)
+			for (int k = 0; k < segmentor.figure.hogDetectionResult.size(); k++)
 			{
-				ArrayList<PanelSegInfo> segmentationResult = segmentor.figure.segmentationResultIndividualLabel.get(k);
+				ArrayList<PanelSegInfo> segmentationResult = segmentor.figure.hogDetectionResult.get(k);
 				if (segmentationResult == null) continue;
 				
 				for (int j = 0; j < segmentationResult.size(); j++)
@@ -427,7 +427,7 @@ public class PanelSegEval
 					//Construct filename
 					Path resultPatchFolder = rstFolder.resolve("Detection");	
 					if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
-					resultPatchFolder = resultPatchFolder.resolve(PanelSeg.labelsToDetect[k]);	
+					resultPatchFolder = resultPatchFolder.resolve(PanelSegLabelRegHoG.labelSetsHOG[k]);	
 					if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
 					String resultFilename = path.getFileName().toString();
 					int pos = resultFilename.lastIndexOf('.');

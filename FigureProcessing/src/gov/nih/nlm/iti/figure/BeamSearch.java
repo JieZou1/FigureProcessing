@@ -9,6 +9,12 @@ import org.apache.commons.lang3.ArrayUtils;
 
 class BeamSearch 
 {
+	/**
+	 * A helper class for Beam Search, representing a beam node.
+	 * Holding a path up to this particular node (Detected and Classified patch) in a line. 
+	 * @author Jie Zou
+	 *
+	 */
 	class BeamNode
 	{
 		double logProb; 		//Use this to sort different paths
@@ -18,7 +24,7 @@ class BeamSearch
 	}
 	
 	/**
-	 * Comparator for sorting BeamNode in reverse order of normalizedProb.
+	 * Comparator for sorting BeamNode in descending order of logProb.
 	 * @author Jie Zou
 	 */
 	class BeamNodeDescending implements Comparator<BeamNode>
@@ -33,6 +39,12 @@ class BeamSearch
 		}		
 	}
 
+	/**
+	 * A helper class for Beam Search, representing beam lines.
+	 * Holding a path to the current line.
+	 * @author Jie Zou
+	 *
+	 */
 	class BeamLines
 	{
 		double logProb; 		//Use this to sort different paths
@@ -41,7 +53,7 @@ class BeamSearch
 	}
 	
 	/**
-	 * Comparator for sorting BeamLine in reverse order of normalizedProb.
+	 * Comparator for sorting BeamLine in descending order of logProb.
 	 * @author Jie Zou
 	 */
 	class BeamLineDescending implements Comparator<BeamLines>
@@ -73,7 +85,13 @@ class BeamSearch
 		this.beamLength = beamLength;		
 	}
 
-	public BeamLines Search(ArrayList<ArrayList<PanelSegInfo>> lns, boolean vertical)
+	/**
+	 * Do Beam Search for all the lines
+	 * @param lns The lines
+	 * @param vertical Whether they are vertical or horizontal lines.
+	 * @return
+	 */
+	public BeamLines search(ArrayList<ArrayList<PanelSegInfo>> lns, boolean vertical)
 	{
 		this.nLines = lns.size();
 		this.lines = new ArrayList<ArrayList<PanelSegInfo>>();
@@ -82,10 +100,8 @@ class BeamSearch
 		for (int i = 0; i < nLines; i++) 
 		{
 			ArrayList<PanelSegInfo> line = lns.get(i);
-			if (vertical)
-	        	line.sort(new LabelRectTopAscending()); //In each line, sort according to their Top
-			else				
-				line.sort(new LabelRectLeftAscending()); //In each line, sort according to their Left
+			if (vertical)  	line.sort(new LabelRectTopAscending()); //In each line, sort according to their Top
+			else			line.sort(new LabelRectLeftAscending()); //In each line, sort according to their Left
         	
         	this.lines.add(line);
         
@@ -103,24 +119,31 @@ class BeamSearch
         	ArrayList<PanelSegInfo> line = lines.get(i);
         	if (i == 0 || line.size() == 1)
         	{	//If there is only one patch in the line, we don't need to try reverse.
-        		//We also assume the first line has to be from left to right
-        		BeamNode[][] path = Search(lines.get(i));
-        		lineCandidatePaths[i] = path[path.length-1];
+        		//We also assume the first line has to be from left to right or from top to bottom
+        		BeamNode[][] path = searchInLine(lines.get(i));
+        		lineCandidatePaths[i] = path[path.length - 1];
         	}
         	else
         	{
-        		BeamNode[][] path = Search(lines.get(i));
-        		BeamNode[][] reversePath = Search(linesReverse.get(i));
+        		BeamNode[][] path = searchInLine(lines.get(i));
+        		BeamNode[][] reversePath = searchInLine(linesReverse.get(i));
 
-        		lineCandidatePaths[i] = ArrayUtils.addAll(path[path.length-1], reversePath[reversePath.length-1]); 
+        		lineCandidatePaths[i] = ArrayUtils.addAll(path[path.length - 1], reversePath[reversePath.length - 1]); 
     			Arrays.sort(lineCandidatePaths[i], new BeamNodeDescending());
         	}
         }
         
+        BeamLines lines = SearchLines(); //Search in lineCandidatePaths, to find the final path of all lines.
+        
         return SearchLines();
 	}
 
-	private BeamNode[][] Search(ArrayList<PanelSegInfo> line) 
+	/**
+	 * Beam Search within a line
+	 * @param line
+	 * @return
+	 */
+	private BeamNode[][] searchInLine(ArrayList<PanelSegInfo> line) 
 	{
 		int sequenceLength = line.size();
 		BeamNode[][] beamNodePaths = new BeamNode[sequenceLength][];
@@ -157,20 +180,25 @@ class BeamSearch
 						if (j < PanelSeg.labelToReg.length)	bn.labels.add(PanelSeg.labelToReg[j]);
 						else bn.labels.add('#'); //We use # to indicate no-label patch.
 						
-						if (IsLegal(bn))	candidates.add(bn);
+						if (!IsLegal(bn)) continue;
+						
+						candidates.add(bn);
 					}					
 				}
 			}
 			
-			//Normalize candidates prob
 			BeamNode[] candidatesArray = candidates.toArray(new BeamNode[0]);
 			Arrays.sort(candidatesArray, new BeamNodeDescending());
 
-			beamNodePaths[i] = candidatesArray.length < beamLength ? candidatesArray: Arrays.copyOfRange(candidatesArray, 0, beamLength);			
+			beamNodePaths[i] = candidatesArray.length < beamLength ? candidatesArray : Arrays.copyOfRange(candidatesArray, 0, beamLength);			
 		}
 		return beamNodePaths;
 	}
 
+	/**
+	 * Beam Search of all possible lines
+	 * @return
+	 */
 	private BeamLines SearchLines()
 	{
 		beamLinePaths = new BeamLines[nLines][];
@@ -187,7 +215,8 @@ class BeamSearch
 					bl.logProb = paths[j].logProb;
 					bl.labels.add(paths[j].labels);
 					bl.patchs.add(paths[j].patchs);
-					candidates.add(bl);
+					
+					if (IsLegal(bl)) 	candidates.add(bl);
 				}
 			}
 			else
@@ -208,7 +237,6 @@ class BeamSearch
 				}
 			}
 			
-			//Normalize candidates prob
 			BeamLines[] candidatesArray = candidates.toArray(new BeamLines[0]);
 			Arrays.sort(candidatesArray, new BeamLineDescending());
 
@@ -220,6 +248,12 @@ class BeamSearch
 		return beamLinePaths[beamLinePaths.length-1][0];
 	}
 	
+	/**
+	 * Check whether a single line path is legal.
+	 * 
+	 * @param bn
+	 * @return
+	 */
 	private boolean IsLegal(BeamNode bn) 
 	{
 		//Get label sequence
@@ -237,9 +271,14 @@ class BeamSearch
 		
 		if (labels.size() == 0 || labels.size() == 1) return true;
 		
-		return IsLegal(labels, labelPatches);
+		return IsLegal(labels, labelPatches, false);
 	}
 
+	/**
+	 * Check whether a multiple line path is legal
+	 * @param bl
+	 * @return
+	 */
 	private boolean IsLegal(BeamLines bl)
 	{
 		//Get label sequence
@@ -256,9 +295,9 @@ class BeamSearch
 			}
 		}
 		
-		if (labels.size() == 0 || labels.size() == 1) return true;
+		if (labels.size() == 0) return true;
 
-		return IsLegal(labels, labelPatches);
+		return IsLegal(labels, labelPatches, true);
 	}
 
 	/**
@@ -267,18 +306,24 @@ class BeamSearch
 	 * @param patches
 	 * @return
 	 */
-	private boolean IsLegal(ArrayList<Character> labels, ArrayList<PanelSegInfo> patches)
+	private boolean IsLegal(ArrayList<Character> labels, ArrayList<PanelSegInfo> patches, Boolean multiplelines)
 	{
-		//1. Check Label Sequence
-		char prevCh = labels.get(0);
-		for (int i = 1; i < labels.size(); i++)
-		{
-			char currCh = labels.get(i);
-			if (Character.toLowerCase(prevCh) >= Character.toLowerCase(currCh)) return false; //It could be in ascending order only.
-			prevCh = currCh;
+		{//*** We assume labels are continuous and in ascending order only and allow at most missing 2 labels.
+			char prevCh = Character.toLowerCase(labels.get(0));
+			if (multiplelines)
+			{
+				if (prevCh - 'a' > 2) return false;
+			}
+			for (int i = 1; i < labels.size(); i++)
+			{
+				char currCh = Character.toLowerCase(labels.get(i));
+				if (currCh - prevCh <= 0) return false;	//Has to be in ascending order 
+				if (currCh - prevCh > 2) return false; 	//Has to be within missing 3 labels
+				prevCh = currCh;
+			}
 		}
 		
-		//2. Check overlapping Patches, we don't allow the label patches to be overlapping
+		//*** Check overlapping patches, we don't allow the label patches to be overlapping
 		for (int i = 0; i < patches.size(); i++)
 		{
 			Rectangle rect1 = patches.get(i).labelRect;
@@ -289,7 +334,8 @@ class BeamSearch
 			}
 		}
 		
-		//3. If 'A' or 'a' is in the labels, all other patches must not be at the top of left of 'a' or 'A'
+		
+		// *** If 'A' or 'a' is in the labels, all other patches must not be at the top-left of 'a' or 'A'
 		char firstCh = labels.get(0);
 		if (firstCh == 'a' || firstCh == 'A')
 		{
@@ -297,8 +343,9 @@ class BeamSearch
 			for (int i = 1; i < patches.size(); i++)
 			{
 				Rectangle rectangle = patches.get(i).labelRect;
-				if (rectangle.y + rectangle.height < aRectangle.y) return false;
-				if (rectangle.x + rectangle.width < aRectangle.x) return false;
+				if (rectangle.y + rectangle.height < aRectangle.y &&
+					rectangle.x + rectangle.width < aRectangle.x) 
+					return false;
 			}
 		}
 		

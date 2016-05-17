@@ -58,7 +58,7 @@ final class PanelSegTrainLabelCrop extends PanelSegTrainMethod
 		//Load GT annotation
 		String gt_xml_file = image_file_path.replaceAll(".jpg", "_data.xml");
 		if (!Files.exists(Paths.get(gt_xml_file))) return;
-		gtSegmentation = PanelSeg.LoadPanelSegGt(gt_xml_file);
+		gtSegmentation = PanelSeg.loadPanelSegGt(gt_xml_file);
 		
 		//Load original Image and generate gray, bina and inverted images.
 		image = imread(image_file_path, CV_LOAD_IMAGE_COLOR);

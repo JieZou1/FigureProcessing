@@ -18,7 +18,7 @@ class Figure
 	Mat imageGrayInverted;	//The inverted gray image
 	int imageWidth, imageHeight;
 	
-	ArrayList<ArrayList<PanelSegInfo>> segmentationResultIndividualLabel; //The segmentation results for each individual labels
+	ArrayList<ArrayList<PanelSegInfo>> hogDetectionResult; //The HOG method detection result of all labelSetsToDetect
 	
 	ArrayList<PanelSegInfo> segmentationResult;	//The finally segmentation results
 	

@@ -13,6 +13,8 @@ import org.bytedeco.javacpp.opencv_objdetect.HOGDescriptor;
 
 public class PanelSegLabelRegHoG extends PanelSegLabelReg
 {
+	static String[] labelSetsHOG = {"A", "ad", "BDEFPpR", "bhKk", "CceGOoQ", "fIiJjLlrTt", "gqSs", "HMmNn" };
+	
 	//The HoG parameters used in both training and testing
     static protected Size winSize_64 = new Size(64, 64);
 //    static private Size winSize_32 = new Size(32, 32); //The size of the training label patches
@@ -42,11 +44,10 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 	
 	public PanelSegLabelRegHoG() 
 	{
-		int n = PanelSeg.labelsToDetect.length;		svmModels = new float[n][];
+		int n = labelSetsHOG.length;		svmModels = new float[n][];
 		for (int i = 0; i < n; i++)
 		{
-			String classString = "gov.nih.nlm.iti.figure.PanelSegLabelRegHoGModel_";
-			classString += PanelSeg.labelsToDetect[i];
+			String classString = "gov.nih.nlm.iti.figure.PanelSegLabelRegHoGModel_" + labelSetsHOG[i];
 			try {
 				Class<?> cls = Class.forName(classString);
 				Field field = cls.getField("svmModel");
@@ -67,33 +68,32 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 	 */
 	public void segment(Mat image)  
 	{
-		preSegment(image);
+		preSegment(image);	//Common initializations for all segmentation method.
 
-		HoGDetect();
+		HoGDetect();		//HoG Detection, detected patches are stored in figure.hogDetectionResult.
 		
-		//TODO: merge all segmentationResultIndividualLabel to one set of label result and save to segmentationResult
+		//Merge all hogDetectionResult to segmentationResult
 		mergeDetectedLabelsSimple();
 	}
 	
 	protected void HoGDetect() 
 	{
-		int n = PanelSeg.labelsToDetect.length;
-		figure.segmentationResultIndividualLabel = new ArrayList<ArrayList<PanelSegInfo>>();
-		for (int i = 0; i < n; i++) figure.segmentationResultIndividualLabel.add(null);
+		int n = labelSetsHOG.length;
+		figure.hogDetectionResult = new ArrayList<ArrayList<PanelSegInfo>>();
+		for (int i = 0; i < n; i++) figure.hogDetectionResult.add(null);
 		
 		//Resize the image. 
+        //double scale = 64.0 / minimumLabelSize; //check statistics.txt to decide this scaling factor.
         double scale = 64.0 / minimumLabelSize; //check statistics.txt to decide this scaling factor.
-        int _width = (int)(figure.imageWidth * scale + 0.5);
-        int _height = (int)(figure.imageHeight * scale + 0.5);
+        int _width = (int)(figure.imageWidth * scale + 0.5), _height = (int)(figure.imageHeight * scale + 0.5);
         Size newSize = new Size(_width, _height);
         Mat imgScaled = new Mat(); resize(figure.imageGray, imgScaled, newSize);
         //Mat imgeScaledInverted = new Mat(); resize(figure.imageGrayInverted, imgeScaledInverted, newSize);
 		//Mat imgeScaledInverted = subtract(Scalar.all(255), imgScaled).asMat();
 		
 		for (int i = 0; i < n; i++)
-		//for (int i = 0; i <= 6; i++)
 		{
-			String panelLabelSet = labelsToDetect[i];
+			String panelLabelSet = labelSetsHOG[i];
 			float[] svmModel = svmModels[i];
 			double minSize = labelMinSize * scale;
 			double maxSize = labelMaxSize * scale;
@@ -122,7 +122,7 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 		            segInfo.labelRect = orig_rect;
 		            segmentationResult.add(segInfo);
 				}
-				figure.segmentationResultIndividualLabel.set(i, segmentationResult);
+				figure.hogDetectionResult.set(i, segmentationResult);
 			}
 		}
 	}
@@ -167,11 +167,11 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 	protected void mergeDetectedLabelsSimple() 
 	{
 		figure.segmentationResult = new ArrayList<PanelSegInfo>(); //Reset
-		if (figure.segmentationResultIndividualLabel == null) return;
+		if (figure.hogDetectionResult == null) return;
 		
-		for (int i = 0; i < figure.segmentationResultIndividualLabel.size(); i++)
+		for (int i = 0; i < figure.hogDetectionResult.size(); i++)
 		{
-			ArrayList<PanelSegInfo> result = figure.segmentationResultIndividualLabel.get(i);
+			ArrayList<PanelSegInfo> result = figure.hogDetectionResult.get(i);
 			if (result == null) continue;
 			for (int j = 0; j < result.size(); j++)
 				figure.segmentationResult.add(result.get(j));

@@ -33,15 +33,15 @@ class PanelSegLabelRegHoGSvm extends PanelSegLabelRegHoG
 	 */
 	public void segment(Mat image)
 	{
-		preSegment(image);
+		preSegment(image);	//Common initializations for all segmentation method.
 
-		HoGDetect();
+		HoGDetect();		//HoG Detection, detected patches are stored in figure.hogDetectionResult.
 	
-		mergeDetectedLabelsSimple();
+		mergeDetectedLabelsSimple();	//All detected patches are merged into figure.segmentationResult
 
-		SvmClassification();
+		SvmClassification();			//SVM (RBF kernel) classification of each detected patch in figure.segmentationResult.
 
-		MergeRecognitionLabelsSimple();
+		MergeRecognitionLabelsSimple();	
 	}
 
 	protected void SvmClassification() 
