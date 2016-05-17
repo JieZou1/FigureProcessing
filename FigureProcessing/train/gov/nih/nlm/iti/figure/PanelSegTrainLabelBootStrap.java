@@ -60,9 +60,9 @@ final class PanelSegTrainLabelBootStrap extends PanelSegTrainMethod
 		hog.segment(image_file_path);
 		
 		//Save detected patches
-		for (int i = 0; i < hog.figure.hogDetectionResult.size(); i++)
+		for (int i = 0; i < hog.hogDetectionResult.size(); i++)
 		{
-			ArrayList<PanelSegInfo> segmentationResult = hog.figure.hogDetectionResult.get(i);
+			ArrayList<PanelSegInfo> segmentationResult = hog.hogDetectionResult.get(i);
 			if (segmentationResult == null) continue;
 			
 			for (int j = 0; j < segmentationResult.size(); j++)

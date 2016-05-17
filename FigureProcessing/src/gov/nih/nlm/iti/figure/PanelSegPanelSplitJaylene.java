@@ -17,7 +17,7 @@ import gov.nih.nlm.iti.panelSegmentation.regular.segmentation.PanelSplitter;
  * @author Jie Zou
  *
  */
-public final class PanelSegJaylene extends PanelSeg
+public final class PanelSegPanelSplitJaylene extends PanelSegPanelSplit
 {
 	//private String imageFilePath;
 	private Mat matImage;
@@ -26,7 +26,7 @@ public final class PanelSegJaylene extends PanelSeg
 	private void segment()
 	{
 		figure = new Figure(matImage);	//Construct a figure object for saving processing results
-		figure.segmentationResult = new ArrayList<PanelSegInfo>();
+		figure.panelSegResult = new ArrayList<PanelSegInfo>();
 
 		PanelSplitter extractPanel = new PanelSplitter(bufferedImage);	//Construct Jaylene's panel object for calling her segmentation method
 		extractPanel.removeLabel();
@@ -36,7 +36,7 @@ public final class PanelSegJaylene extends PanelSeg
 		{
 			PanelSegInfo panel = new PanelSegInfo();
 			panel.panelRect = rect;
-			figure.segmentationResult.add(panel);
+			figure.panelSegResult.add(panel);
 		}
 	}
 	

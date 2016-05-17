@@ -10,10 +10,10 @@ import org.bytedeco.javacpp.opencv_core.Mat;
 import gov.nih.nlm.iti.figure.PanelSplitter.Final_Panel;
 import weka.classifiers.Classifier;
 
-public class PanelSegDaekeun extends PanelSeg 
+public class PanelSegLabelRegDaekeun extends PanelSegLabelReg 
 {
 	static Classifier OCR_model = null;
-	public PanelSegDaekeun()
+	public PanelSegLabelRegDaekeun()
 	{
 		if (OCR_model == null)
 		{
@@ -52,7 +52,7 @@ public class PanelSegDaekeun extends PanelSeg
 				panel.labelRect = new Rectangle(p.left, p.top, p.right-p.left, p.bottom-p.top);
 				panel.panelLabel = "" + p.label;
 			}
-			figure.segmentationResult.add(panel);
+			figure.panelSegResult.add(panel);
 		}
 	}
 	

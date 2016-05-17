@@ -62,9 +62,10 @@ public class PanelSegEval
 				allPaths.add(path);
 				switch (method) 
 				{
-				case "Jaylene": segmentors.add(new PanelSegJaylene());			break;
-				case "Santosh": segmentors.add(new PanelSegSantosh());			break;
-				case "Daekeun": segmentors.add(new PanelSegDaekeun());			break;
+				case "Jaylene": segmentors.add(new PanelSegPanelSplitJaylene());			break;
+				case "Santosh": segmentors.add(new PanelSegPanelSplitSantosh());			break;
+				case "Daekeun": segmentors.add(new PanelSegLabelRegDaekeun());			break;
+				case "PanelSegJS": segmentors.add(new PanelSegPanelSplitJS());			break;
 				case "LabelRegMSER": segmentors.add(new PanelSegLabelRegMSER());break;
 				case "LabelRegHoG": segmentors.add(new PanelSegLabelRegHoG());break;
 				case "LabelRegHoGSvm": segmentors.add(new PanelSegLabelRegHoGSvm());break;
@@ -162,7 +163,7 @@ public class PanelSegEval
 		matchAutoGt();
 
 		//Evaluate, save the result to evaluationFile
-		EvaluateLabelRecog();
+		if (segmentors.get(0) instanceof PanelSegLabelReg)	EvaluateLabelRecog();
 	}
 	
 	/**
@@ -405,29 +406,56 @@ public class PanelSegEval
 		
 		System.out.println("Processing "+ i + " "  + filename);
 		segmentor.segment(filename);
-	
-		//Save detected patches
-		if (segmentor.figure.hogDetectionResult != null) 
+
+		if (segmentor instanceof PanelSegLabelRegHoG)
 		{
-			for (int k = 0; k < segmentor.figure.hogDetectionResult.size(); k++)
+			//Save detected patches
+			if (((PanelSegLabelRegHoG)segmentor).hogDetectionResult != null) 
 			{
-				ArrayList<PanelSegInfo> segmentationResult = segmentor.figure.hogDetectionResult.get(k);
-				if (segmentationResult == null) continue;
-				
-				for (int j = 0; j < segmentationResult.size(); j++)
+				for (int k = 0; k < ((PanelSegLabelRegHoG)segmentor).hogDetectionResult.size(); k++)
 				{
-					if (j == 2) break; //We just save the top patches for training, in order to avoiding collecting a very large negative training set at the beginning.
+					ArrayList<PanelSegInfo> segmentationResult = ((PanelSegLabelRegHoG)segmentor).hogDetectionResult.get(k);
+					if (segmentationResult == null) continue;
 					
-					PanelSegInfo segInfo = segmentationResult.get(j);
+					for (int j = 0; j < segmentationResult.size(); j++)
+					{
+						if (j == 2) break; //We just save the top patches for training, in order to avoiding collecting a very large negative training set at the beginning.
+						
+						PanelSegInfo segInfo = segmentationResult.get(j);
+						Rectangle rectangle = segInfo.labelRect;
+						
+						Mat patch = segInfo.labelInverted ? AlgorithmEx.cropImage(segmentor.figure.imageGrayInverted, rectangle) : 	AlgorithmEx.cropImage(segmentor.figure.imageGray, rectangle);
+						resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
+						
+						//Construct filename
+						Path resultPatchFolder = rstFolder.resolve("Detection");	
+						if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
+						resultPatchFolder = resultPatchFolder.resolve(PanelSegLabelRegHoG.labelSetsHOG[k]);	
+						if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
+						String resultFilename = path.getFileName().toString();
+						int pos = resultFilename.lastIndexOf('.');
+						
+						resultFilename = resultFilename.substring(0, pos) + "." + rectangle.toString() + "." + segInfo.labelInverted + ".bmp";
+						Path resultPatchFile = resultPatchFolder.resolve(resultFilename);
+						imwrite(resultPatchFile.toString(), patch);
+					}
+				}
+			}
+			//Save Recognized patches
+			if (segmentor.figure.panelSegResult != null) 
+			{
+				for (int k = 0; k < segmentor.figure.panelSegResult.size(); k++)
+				{
+					PanelSegInfo segInfo = segmentor.figure.panelSegResult.get(k);
 					Rectangle rectangle = segInfo.labelRect;
 					
 					Mat patch = segInfo.labelInverted ? AlgorithmEx.cropImage(segmentor.figure.imageGrayInverted, rectangle) : 	AlgorithmEx.cropImage(segmentor.figure.imageGray, rectangle);
 					resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
 					
 					//Construct filename
-					Path resultPatchFolder = rstFolder.resolve("Detection");	
+					Path resultPatchFolder = rstFolder.resolve("Recognition");	
 					if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
-					resultPatchFolder = resultPatchFolder.resolve(PanelSegLabelRegHoG.labelSetsHOG[k]);	
+					resultPatchFolder = resultPatchFolder.resolve(Character.isUpperCase(segInfo.panelLabel.charAt(0)) ? segInfo.panelLabel + "_" : segInfo.panelLabel);	
 					if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
 					String resultFilename = path.getFileName().toString();
 					int pos = resultFilename.lastIndexOf('.');
@@ -438,30 +466,7 @@ public class PanelSegEval
 				}
 			}
 		}
-		//Save Recognized patches
-		if (segmentor.figure.segmentationResult != null) 
-		{
-			for (int k = 0; k < segmentor.figure.segmentationResult.size(); k++)
-			{
-				PanelSegInfo segInfo = segmentor.figure.segmentationResult.get(k);
-				Rectangle rectangle = segInfo.labelRect;
-				
-				Mat patch = segInfo.labelInverted ? AlgorithmEx.cropImage(segmentor.figure.imageGrayInverted, rectangle) : 	AlgorithmEx.cropImage(segmentor.figure.imageGray, rectangle);
-				resize(patch, patch, new Size(64, 64)); //Resize to 64x64 for easy browsing the results
-				
-				//Construct filename
-				Path resultPatchFolder = rstFolder.resolve("Recognition");	
-				if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
-				resultPatchFolder = resultPatchFolder.resolve(Character.isUpperCase(segInfo.panelLabel.charAt(0)) ? segInfo.panelLabel + "_" : segInfo.panelLabel);	
-				if (!Files.exists(resultPatchFolder))	Files.createDirectory(resultPatchFolder);
-				String resultFilename = path.getFileName().toString();
-				int pos = resultFilename.lastIndexOf('.');
-				
-				resultFilename = resultFilename.substring(0, pos) + "." + rectangle.toString() + "." + segInfo.labelInverted + ".bmp";
-				Path resultPatchFile = resultPatchFolder.resolve(resultFilename);
-				imwrite(resultPatchFile.toString(), patch);
-			}
-		}
+			
 		{
 			//Save Final Segmentation Result
 			//2.1 Save result in images
@@ -565,6 +570,7 @@ public class PanelSegEval
 			System.out.println("Jaylene		Jaylene's method based on cross uniform band");
 			System.out.println("Santosh		Santosh's method based on long line segments");
 			System.out.println("Daekeun		Daekeun method (Panel Splitter)");
+			System.out.println("PanelSegJS	Panel Segmentation by calling Jaylene's and Santosh's methods, and then fuse them");
 			System.out.println("LabelRegMSER	MSER method for recognizing Label candidate regions");
 			System.out.println("LabelRegHoG	HoG method for recognizing Label candidate regions");
 			System.out.println("LabelRegHoGSvm	HoG method followed by SVM classification for recognizing Label candidate regions");
@@ -590,6 +596,7 @@ public class PanelSegEval
 		case "Jaylene": break;
 		case "Santosh": break;
 		case "Daekeun": break;
+		case "PanelSegJS": break;
 		case "LabelRegMSER": break;
 		case "LabelRegHoG": break;
 		case "LabelRegHoGSvm": break;

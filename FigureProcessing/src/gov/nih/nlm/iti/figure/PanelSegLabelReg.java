@@ -3,6 +3,14 @@ package gov.nih.nlm.iti.figure;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 
+/**
+ * The base class for Label Recognition methods<p>
+ * 
+ * This class is not intended to be instantiated, so we make it abstract. 
+ * 
+ * @author Jie Zou
+ *
+ */
 public abstract class PanelSegLabelReg extends PanelSeg 
 {
 	/**

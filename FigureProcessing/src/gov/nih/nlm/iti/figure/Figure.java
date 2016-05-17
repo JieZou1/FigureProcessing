@@ -18,15 +18,7 @@ class Figure
 	Mat imageGrayInverted;	//The inverted gray image
 	int imageWidth, imageHeight;
 	
-	ArrayList<ArrayList<PanelSegInfo>> hogDetectionResult; //The HOG method detection result of all labelSetsToDetect
-	
-	ArrayList<PanelSegInfo> segmentationResult;	//The finally segmentation results
-	
-	//Below info is collected from LabelStatistics.txt
-	static final int label_box_max_width = 70;
-	//static int label_box_min_width = 5;
-	static final int label_box_max_height = 70;
-	//static int label_box_min_height = 5;
+	ArrayList<PanelSegInfo> panelSegResult;	//The final segmentation results
 	
 	/**
 	 * ctor, from a BGR image

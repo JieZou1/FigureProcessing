@@ -36,8 +36,9 @@ enum Orientation { Horizontal, Vertical }
  */
 public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm 
 {
-	static int labelMinSize = 10;	//The minimum side length of panel labels
-	static int labelMaxSize = 70;	//The maximum side length of panel labels
+	//Below info is collected from LabelStatistics.txt
+	static final int labelMinSize = 10;	//The minimum side length of panel labels
+	static final int labelMaxSize = 70;	//The maximum side length of panel labels
 
 	static char[] labelToReg 	 = {'a', 'A', 'b', 'B', 'c', 'd', 'D', 'e', 'E', 'f', 'F', 'g', 'G', 'h', 'H', 'i', 'I', 'j', 'J', 'k', 'l', 'L', 'm', 'M', 'n', 'N', 'o', 'p', 'Q', 'r', 'R', 's', 't', 'T'}; //All possible panel labels to recognize
 	static char[] labelToRegTodo = {'q', 'u', 'v', 'w', 'x', 'y', 'Y', 'z'}; //All possible panel labels to recognize (but not ready yet, To Be Done)
@@ -57,7 +58,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 		figure.imageGray = new Mat();		cvtColor(figure.image, figure.imageGray, CV_BGR2GRAY);
 		figure.imageGrayInverted = subtract(Scalar.all(255), figure.imageGray).asMat();
 		
-		figure.segmentationResult = new ArrayList<PanelSegInfo>();		
+		figure.panelSegResult = new ArrayList<PanelSegInfo>();		
 	}
 	
  	public abstract void segment(Mat image);
@@ -92,7 +93,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	 * Get the panel segmentation result
 	 * @return The detected panels
 	 */
-	public ArrayList<PanelSegInfo> getSegmentationResult()	{	return figure.segmentationResult;	}
+	public ArrayList<PanelSegInfo> getSegmentationResult()	{	return figure.panelSegResult;	}
 
 	/**
 	 * Get the panel segmentation result by drawing the panel boundaries on the image
@@ -101,7 +102,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 	public Mat getSegmentationResultInMat()
 	{
 		Mat img = figure.image.clone();
-		for (PanelSegInfo panel : figure.segmentationResult)
+		for (PanelSegInfo panel : figure.panelSegResult)
 		{
 			if (panel.panelRect != null )
 			{

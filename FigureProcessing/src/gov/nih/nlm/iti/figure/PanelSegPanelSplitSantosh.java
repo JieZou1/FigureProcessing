@@ -13,7 +13,7 @@ import org.bytedeco.javacpp.opencv_core.Mat;
 import org.bytedeco.javacpp.opencv_core.Point;
 import org.bytedeco.javacpp.opencv_core.Scalar;
 
-public final class PanelSegSantosh extends PanelSeg
+public final class PanelSegPanelSplitSantosh extends PanelSegPanelSplit
 {
 	final private double RESIZE_FACTOR = 0.4;					//For resizing the image
 	
@@ -321,7 +321,7 @@ public final class PanelSegSantosh extends PanelSeg
 		Collections.sort(verPositions);
 		
 		//Find rectangle panels from horPositions and verPositions
-		figure.segmentationResult = new ArrayList<PanelSegInfo>();
+		figure.panelSegResult = new ArrayList<PanelSegInfo>();
 		//figure.result.panelRects = new ArrayList<Rectangle>();
 		for (int i = 0; i < horPositions.size() - 1; i++)
 		{
@@ -336,7 +336,7 @@ public final class PanelSegSantosh extends PanelSeg
 				PanelSegInfo panel = new PanelSegInfo();
 				panel.panelRect = rect;
 				//figure.result.panelRects.add(rect);
-				figure.segmentationResult.add(panel);
+				figure.panelSegResult.add(panel);
 			}
 		}
 	}

@@ -5,7 +5,7 @@ import java.awt.Rectangle;
 import org.bytedeco.javacpp.opencv_core.*;
 import org.bytedeco.javacpp.opencv_features2d.MSER;
 
-class PanelSegLabelRegMSER extends PanelSeg 
+class PanelSegLabelRegMSER extends PanelSegLabelReg
 {
 	public void segment(Mat image)  
 	{
@@ -20,12 +20,12 @@ class PanelSegLabelRegMSER extends PanelSeg
 		for (int i = 0; i < n; i++)
 		{
 			rect = boxes.get(i);
-			if (rect.width() > Figure.label_box_max_width) continue;
-			if (rect.height() > Figure.label_box_max_height) continue;
+			if (rect.width() > labelMaxSize) continue;
+			if (rect.height() > labelMaxSize) continue;
 			
 			PanelSegInfo panel = new PanelSegInfo();
 			panel.labelRect = new Rectangle(rect.x(), rect.y(), rect.width(), rect.height());
-			figure.segmentationResult.add(panel);
+			figure.panelSegResult.add(panel);
 		}		
 	}
 

@@ -42,6 +42,8 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
     private HOGDescriptor hog;
     private float[][] svmModels;
 	
+	protected ArrayList<ArrayList<PanelSegInfo>> hogDetectionResult; //The HOG method detection result of all labelSetsToDetect
+    
 	public PanelSegLabelRegHoG() 
 	{
 		int n = labelSetsHOG.length;		svmModels = new float[n][];
@@ -79,8 +81,8 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 	protected void HoGDetect() 
 	{
 		int n = labelSetsHOG.length;
-		figure.hogDetectionResult = new ArrayList<ArrayList<PanelSegInfo>>();
-		for (int i = 0; i < n; i++) figure.hogDetectionResult.add(null);
+		hogDetectionResult = new ArrayList<ArrayList<PanelSegInfo>>();
+		for (int i = 0; i < n; i++) hogDetectionResult.add(null);
 		
 		//Resize the image. 
         //double scale = 64.0 / minimumLabelSize; //check statistics.txt to decide this scaling factor.
@@ -122,7 +124,7 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 		            segInfo.labelRect = orig_rect;
 		            segmentationResult.add(segInfo);
 				}
-				figure.hogDetectionResult.set(i, segmentationResult);
+				hogDetectionResult.set(i, segmentationResult);
 			}
 		}
 	}
@@ -166,15 +168,15 @@ public class PanelSegLabelRegHoG extends PanelSegLabelReg
 	 */
 	protected void mergeDetectedLabelsSimple() 
 	{
-		figure.segmentationResult = new ArrayList<PanelSegInfo>(); //Reset
-		if (figure.hogDetectionResult == null) return;
+		figure.panelSegResult = new ArrayList<PanelSegInfo>(); //Reset
+		if (hogDetectionResult == null) return;
 		
-		for (int i = 0; i < figure.hogDetectionResult.size(); i++)
+		for (int i = 0; i < hogDetectionResult.size(); i++)
 		{
-			ArrayList<PanelSegInfo> result = figure.hogDetectionResult.get(i);
+			ArrayList<PanelSegInfo> result = hogDetectionResult.get(i);
 			if (result == null) continue;
 			for (int j = 0; j < result.size(); j++)
-				figure.segmentationResult.add(result.get(j));
+				figure.panelSegResult.add(result.get(j));
 		}
 	}
 	

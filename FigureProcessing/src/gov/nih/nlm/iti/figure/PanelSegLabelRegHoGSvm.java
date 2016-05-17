@@ -46,11 +46,11 @@ class PanelSegLabelRegHoGSvm extends PanelSegLabelRegHoG
 
 	protected void SvmClassification() 
 	{
-		if (figure.segmentationResult.size() == 0) return;
+		if (figure.panelSegResult.size() == 0) return;
 		
-		for (int i = 0; i < figure.segmentationResult.size(); i++)
+		for (int i = 0; i < figure.panelSegResult.size(); i++)
 		{
-			PanelSegInfo info = figure.segmentationResult.get(i);
+			PanelSegInfo info = figure.panelSegResult.get(i);
 			if (info == null) continue;
 			
 			Mat patch = info.labelInverted ? AlgorithmEx.cropImage(figure.imageGrayInverted, info.labelRect) : AlgorithmEx.cropImage(figure.imageGray, info.labelRect);
@@ -89,13 +89,13 @@ class PanelSegLabelRegHoGSvm extends PanelSegLabelRegHoG
 
 	private void MergeRecognitionLabelsSimple()
 	{
-		if (figure.segmentationResult.size() == 0) return;
+		if (figure.panelSegResult.size() == 0) return;
 		
 		//set label and score according to the max of labelProbs, computed by SVM
 		ArrayList<PanelSegInfo> candidates = new ArrayList<PanelSegInfo>();
-        for (int j = 0; j < figure.segmentationResult.size(); j++)
+        for (int j = 0; j < figure.panelSegResult.size(); j++)
         {
-        	PanelSegInfo obj = figure.segmentationResult.get(j);
+        	PanelSegInfo obj = figure.panelSegResult.get(j);
         	int maxIndex = AlgorithmEx.findMaxIndex(obj.labelProbs);
         	if (maxIndex == labelToReg.length) continue; //Classified as a negative sample.
         		
@@ -104,6 +104,6 @@ class PanelSegLabelRegHoGSvm extends PanelSegLabelRegHoG
 	        candidates.add(obj);
         }
 		
-        figure.segmentationResult = RemoveOverlappedCandidates(candidates);
+        figure.panelSegResult = RemoveOverlappedCandidates(candidates);
 	}
 }

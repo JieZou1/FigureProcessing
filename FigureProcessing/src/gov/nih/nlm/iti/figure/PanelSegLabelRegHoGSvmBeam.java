@@ -1,6 +1,5 @@
 package gov.nih.nlm.iti.figure;
 
-import java.awt.Rectangle;
 import java.util.ArrayList;
 
 import org.bytedeco.javacpp.opencv_core.Mat;
@@ -33,7 +32,7 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 
 	private void mergeRecognitionLabelsBeam() 
 	{
-		if (figure.segmentationResult.size() == 0) return;
+		if (figure.panelSegResult.size() == 0) return;
 		
 		BeamLines horiLines = beamSearchHori();
 		BeamLines vertLines = beamSearchVert();
@@ -46,14 +45,14 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 		else 							lines = horiLines.logProb >= vertLines.logProb ? horiLines : vertLines;
 		
 		//Reset segmentationResult
-		figure.segmentationResult = new ArrayList<PanelSegInfo>();
+		figure.panelSegResult = new ArrayList<PanelSegInfo>();
 		ArrayList<PanelSegInfo> panels = FinalCheck(lines);
-		if (panels != null)	figure.segmentationResult.addAll(panels);
+		if (panels != null)	figure.panelSegResult.addAll(panels);
 	}
 	
 	private BeamLines beamSearchHori()
 	{
-		ArrayList<PanelSegInfo> candidates = figure.segmentationResult;
+		ArrayList<PanelSegInfo> candidates = figure.panelSegResult;
         candidates.sort(new LabelRectTopAscending()); //Sort detected patches according to their top
 
         //Break them into lines
@@ -89,7 +88,7 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 	
 	private BeamLines beamSearchVert()
 	{
-		ArrayList<PanelSegInfo> candidates = figure.segmentationResult;
+		ArrayList<PanelSegInfo> candidates = figure.panelSegResult;
         candidates.sort(new LabelRectLeftAscending()); //Sort detected patches according to their left
 
         //Break them into lines
@@ -150,47 +149,47 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 		//We remove patches, which does not align with other patches either horizontally or vertically
 		ArrayList<PanelSegInfo> panels = new ArrayList<PanelSegInfo>();
 		
-//		for (int i = 0; i < patches.size(); i++)
-//		{
-//			PanelSegInfo curr_patch = patches.get(i);
-//			panels.add(curr_patch);
-//		}
-		
 		for (int i = 0; i < patches.size(); i++)
 		{
 			PanelSegInfo curr_patch = patches.get(i);
-			Rectangle curr_rect = curr_patch.labelRect;
-			Rectangle rect_hori = new Rectangle(0, curr_rect.y, figure.imageWidth, curr_rect.height);
-			Rectangle rect_vert = new Rectangle(curr_rect.x, 0, curr_rect.width, figure.imageHeight);
-			
-			boolean found_aligned = false;
-			for (int j = 0; j < patches.size(); j++)
-			{
-				if (i == j) continue;
-				PanelSegInfo patch = patches.get(j);
-				Rectangle rect = patch.labelRect;
-				
-				{	//Check horizontally
-					Rectangle intersection = rect.intersection(rect_hori);
-					if (!intersection.isEmpty())
-					{
-						double intersection_area = intersection.width * intersection.height;
-						double rect_area = rect.width * rect.height;
-						if (intersection_area > rect_area / 2)	{	found_aligned = true; break;}
-					}
-				}
-				{	//Check vertically
-					Rectangle intersection = rect.intersection(rect_vert);
-					if (!intersection.isEmpty())
-					{
-						double intersection_area = intersection.width * intersection.height;
-						double rect_area = rect.width * rect.height;
-						if (intersection_area > rect_area / 2)	{	found_aligned = true; break;}
-					}
-				}
-			}
-			if (found_aligned)	panels.add(curr_patch);
+			panels.add(curr_patch);
 		}
+		
+//		for (int i = 0; i < patches.size(); i++)
+//		{
+//			PanelSegInfo curr_patch = patches.get(i);
+//			Rectangle curr_rect = curr_patch.labelRect;
+//			Rectangle rect_hori = new Rectangle(0, curr_rect.y, figure.imageWidth, curr_rect.height);
+//			Rectangle rect_vert = new Rectangle(curr_rect.x, 0, curr_rect.width, figure.imageHeight);
+//			
+//			boolean found_aligned = false;
+//			for (int j = 0; j < patches.size(); j++)
+//			{
+//				if (i == j) continue;
+//				PanelSegInfo patch = patches.get(j);
+//				Rectangle rect = patch.labelRect;
+//				
+//				{	//Check horizontally
+//					Rectangle intersection = rect.intersection(rect_hori);
+//					if (!intersection.isEmpty())
+//					{
+//						double intersection_area = intersection.width * intersection.height;
+//						double rect_area = rect.width * rect.height;
+//						if (intersection_area > rect_area / 2)	{	found_aligned = true; break;}
+//					}
+//				}
+//				{	//Check vertically
+//					Rectangle intersection = rect.intersection(rect_vert);
+//					if (!intersection.isEmpty())
+//					{
+//						double intersection_area = intersection.width * intersection.height;
+//						double rect_area = rect.width * rect.height;
+//						if (intersection_area > rect_area / 2)	{	found_aligned = true; break;}
+//					}
+//				}
+//			}
+//			if (found_aligned)	panels.add(curr_patch);
+//		}
 		
 		return panels;
 		

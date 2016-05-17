@@ -11,37 +11,19 @@ import org.apache.commons.math3.stat.StatUtils;
 import org.bytedeco.javacpp.indexer.UByteBufferIndexer;
 import org.bytedeco.javacpp.opencv_core.*;
 
-import weka.classifiers.Classifier;
-import weka.core.SerializationHelper;
-
 /**
- * A segmetation method try combining Daekeun, Jaylene and Santosh methods 
+ * A segmentation method try combining Jaylene and Santosh methods 
  * 
  * @author Jie Zou
  *
  */
 
-public class PanelSeg1 extends PanelSeg
+public class PanelSegPanelSplitJS extends PanelSegPanelSplit
 {
-	private static Classifier ocrNN = null;
-	
 	ArrayList<UniformBand> uniformBands;
 	
 	public static void Initialize() 
 	{
-		if (ocrNN == null)
-		{
-			try 
-			{
-				ocrNN = (Classifier)SerializationHelper.read("\\Users\\jie\\Openi\\Panel\\programs\\PanelSegmentation\\NN_OCR.model");
-			} 
-			catch (Exception e) 
-			{
-				System.out.println("Unable to read the OCR model file");
-				e.printStackTrace();
-			}
-			System.out.println("OCR model Loaded");
-		}
 	}
 	
 	public void segment(String image_file_path) 
@@ -52,76 +34,11 @@ public class PanelSeg1 extends PanelSeg
 	
 	public void segment(Mat image)
 	{
-		figure = new Figure(image);	//Construct a figure object for saving processing results
-		figure.segmentationResult = new ArrayList<PanelSegInfo>();
-
+		preSegment(image);
 		
-		//panel = new Figure(image, new Rect(0, 0, image.cols(), image.rows()));
-		//panel.DetectUniformBand(5, 15.0, 15.0, 200, 200, true);
-		DetectLabelsDaekeun();
-		//panel.DetectLabelCandidates();
+		DetectUniformBand(5, 15.0, 15.0, 200, 200, true);
 	}
 
-	void DetectLabelsDaekeun()
-	{
-		PanelLabelDetection panelLabelDetectionRef = new PanelLabelDetection();
-		ArrayList<PanelLabelDetection.PanelLabelInfo_Final> candLabelSet = new ArrayList<PanelLabelDetection.PanelLabelInfo_Final>();
-		
-		// panel label detection. 
-		// candLabelSet has all candidate label sets and the setNo denotes the total cand numbers.		
-		if (figure.imageWidth < 1000 && figure.imageHeight < 1000) 
-		{
-			Mat resized_img = new Mat();
-			resize(figure.imageGray, resized_img, new Size(figure.imageWidth* 2, figure.imageHeight * 2));
-			IplImage ipl_img = new IplImage(resized_img);
-			panelLabelDetectionRef.panelLabelDetection(ipl_img, true, candLabelSet, ocrNN);			
-		} 
-		else
-		{
-			IplImage ipl_img = new IplImage(figure.imageGray);
-			panelLabelDetectionRef.panelLabelDetection(ipl_img, false, candLabelSet, ocrNN);
-		}
-		
-		//int setNo = panelLabelDetectionRef.setNo;	
-		
-		// remove duplicate rectangles across the candidate label sets
-		figure.segmentationResult = new ArrayList<PanelSegInfo>();
-		for (int i = 0; i < candLabelSet.size(); i++)
-		{
-			System.out.println("candidate label set: " + i);
-			PanelLabelDetection.PanelLabelInfo_Final panelLabelInfo_Final = candLabelSet.get(i);
-			ArrayList<PanelLabelDetection.PanelLabelInfo> labels = panelLabelInfo_Final.labels;
-			
-			for (int j = 0; j < labels.size(); j++ )
-			{
-				PanelLabelDetection.PanelLabelInfo label = labels.get(j);
-				if (!Character.isAlphabetic(label.label) && !Character.isDigit(label.label)) continue;
-				
-				System.out.println("label: " + label.label + " left: "+ Integer.toString(label.left) + " right: "+ Integer.toString(label.right)
-						+ " top: "+ Integer.toString(label.top) + " bottom: "+ Integer.toString(label.bottom) + " score: " + Double.toString(label.score));
-				boolean isDuplicate = false;
-				for (int k = 0; k < figure.segmentationResult.size(); k++)
-				{
-					Rectangle rect = figure.segmentationResult.get(k).labelRect;
-					
-					if (rect.x == label.left && rect.y == label.top && rect.width == label.right - label.left && rect.height == label.bottom - label.top)
-					{
-						isDuplicate = true; 
-						break;
-					}
-				}
-				if (!isDuplicate)
-				{
-					PanelSegInfo panel = new PanelSegInfo();
-					panel.labelRect = new Rectangle(label.left, label.top, label.right-label.left, label.bottom-label.top);
-					panel.panelLabel = Character.toString(label.label);
-					panel.labelScore = label.score;
-					figure.segmentationResult.add(panel);
-				}				
-			}
-		}
-	}
-	
 	public Mat getUniformBandInMat() 
 	{
 		Mat img = figure.image.clone();
@@ -137,9 +54,9 @@ public class PanelSeg1 extends PanelSeg
 	{
 		Mat img = figure.image.clone();
 		
-		if (figure.segmentationResult == null || figure.segmentationResult.size() == 0) return img;
+		if (figure.panelSegResult == null || figure.panelSegResult.size() == 0) return img;
 		
-		for (PanelSegInfo panel : figure.segmentationResult)
+		for (PanelSegInfo panel : figure.panelSegResult)
 		{
 			Rect rect = new Rect(panel.labelRect.x, panel.labelRect.y, panel.labelRect.width, panel.labelRect.height);
 			rectangle(img, rect, Scalar.RED, 1, 8, 0);
