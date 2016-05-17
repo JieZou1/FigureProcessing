@@ -133,8 +133,6 @@ class BeamSearch
         	}
         }
         
-        BeamLines lines = SearchLines(); //Search in lineCandidatePaths, to find the final path of all lines.
-        
         return SearchLines();
 	}
 
@@ -302,6 +300,7 @@ class BeamSearch
 
 	/**
 	 * Check whether the label sequence is legitimate.
+	 * This function shared by both inline and multiline IsLegal Functions.
 	 * @param labels
 	 * @param patches
 	 * @return
