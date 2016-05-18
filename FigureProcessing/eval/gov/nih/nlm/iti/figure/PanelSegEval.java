@@ -65,11 +65,15 @@ public class PanelSegEval
 				case "Jaylene": segmentors.add(new PanelSegPanelSplitJaylene());			break;
 				case "Santosh": segmentors.add(new PanelSegPanelSplitSantosh());			break;
 				case "Daekeun": segmentors.add(new PanelSegLabelRegDaekeun());			break;
+				
 				case "PanelSegJS": segmentors.add(new PanelSegPanelSplitJS());			break;
+				
 				case "LabelRegMSER": segmentors.add(new PanelSegLabelRegMSER());break;
 				case "LabelRegHoG": segmentors.add(new PanelSegLabelRegHoG());break;
 				case "LabelRegHoGSvm": segmentors.add(new PanelSegLabelRegHoGSvm());break;
 				case "LabelRegHoGSvmBeam": segmentors.add(new PanelSegLabelRegHoGSvmBeam());break;
+
+				case "Complete1": segmentors.add(new PanelSegComplete1());break;
 				}
 			}
 		}
@@ -164,6 +168,7 @@ public class PanelSegEval
 
 		//Evaluate, save the result to evaluationFile
 		if (segmentors.get(0) instanceof PanelSegLabelReg)	EvaluateLabelRecog();
+		if (segmentors.get(0) instanceof PanelSegPanelSplit) EvaluatePanelSplit(); 
 	}
 	
 	/**
@@ -348,6 +353,115 @@ public class PanelSegEval
 		}		
 	}
 	
+	private void EvaluatePanelSplit()
+	{
+		ArrayList<ArrayList<Rectangle>> autoRects = new ArrayList<ArrayList<Rectangle>>();
+		ArrayList<ArrayList<Rectangle>> gtRects = new ArrayList<ArrayList<Rectangle>>();
+		ArrayList<ArrayList<Rectangle>> autoMatchedRects = new ArrayList<ArrayList<Rectangle>>();
+		
+		for (int i = 0; i < matchedIDs.size(); i++)
+		{
+			//count Auto results
+			ArrayList<PanelSegInfo> auto = matchedAutoPanels.get(i);
+			ArrayList<Rectangle> autoRect = new ArrayList<Rectangle>();
+			for (int j = 0; j < auto.size(); j++)
+			{
+				PanelSegInfo panel = auto.get(j);	autoRect.add(panel.panelRect);
+			}
+			autoRects.add(autoRect);
+
+			//count GT results
+			ArrayList<PanelSegInfo> gt = matchedGtPanels.get(i);
+			ArrayList<Rectangle> gtRect = new ArrayList<Rectangle>();
+			for (int j = 0; j < gt.size(); j++)
+			{
+				PanelSegInfo panel = gt.get(j);		gtRect.add(panel.panelRect);
+			}
+			gtRects.add(gtRect);
+			
+			ArrayList<Rectangle> autoMatchedRect = new ArrayList<Rectangle>();
+            for (int j = 0; j < gtRect.size(); j++)
+            {
+                Rectangle gt_rect = gtRect.get(j);
+
+                //Search auto annotation to find matches
+                for (int k = 0; k < autoRect.size(); k++)
+                {
+                    Rectangle auto_rect = autoRect.get(k);
+
+                    {//Criteria 1: Rectangle overlapping is larger than 75%
+                        Rectangle overlapping_rect = gt_rect.intersection(auto_rect);
+                        if (overlapping_rect.isEmpty()) continue;
+                        double overlapping_area = overlapping_rect.width * overlapping_rect.height;
+                        double gt_area = gt_rect.width * gt_rect.height;
+                        if (overlapping_area / gt_area < 0.75) continue;
+                    }
+
+                    {//Criteria 2: Overlapping to adjacent panel of the matching reference panel is less than 5%
+                        int kk; for (kk = 0; kk < gtRect.size(); kk++)
+                        {
+                            if (kk == j) continue;
+
+                            Rectangle gt_rect1 = gtRect.get(kk);
+                            Rectangle overlapping_rect = gt_rect1.intersection(auto_rect);
+                            if (overlapping_rect.isEmpty()) continue;
+                            double overlapping_area = overlapping_rect.width * overlapping_rect.height;
+                            double gt_area = gt_rect1.width * gt_rect1.height;
+                            if (overlapping_area / gt_area > 0.05) break;
+                        }
+                        if (kk != gtRect.size()) continue; //This means auto_rect overlaps with an adjacent gtRects and larger than 5%.
+                    }
+
+                    autoMatchedRect.add(auto_rect); break;
+                }
+            }
+            autoMatchedRects.add(autoMatchedRect);
+		}
+		
+		int countTotalRectGT = 0;
+		int countTotalRectsAuto = 0;
+		int countTotalRectsAutoMatched = 0;
+		for (int i = 0; i < autoRects.size(); i++) countTotalRectsAuto += autoRects.get(i).size();
+		for (int i = 0; i < gtRects.size(); i++) countTotalRectGT += gtRects.get(i).size();
+		for (int i = 0; i < autoMatchedRects.size(); i++) countTotalRectsAutoMatched += autoMatchedRects.get(i).size();
+
+		try (PrintWriter pw = new PrintWriter(evaluationFile.toString()))
+    	{
+			float precision, recall; int countGT, countAuto, countCorrect; String item;
+			
+    		pw.println("Total images processed: " + allPaths.size());
+    		pw.println("Total processing time: " + (endTime - startTime)/1000.0 + " secondes.");
+    		pw.println("Average processing time: " + ((endTime - startTime)/1000.0)/allPaths.size() + " secondes.");
+
+    		pw.println();
+    		pw.println("Item\tGT\tAuto\tCorrect\tPrecision\tRecall");
+    		
+    		item = "Total";
+    		countGT = countTotalRectGT; countAuto = countTotalRectsAuto; countCorrect = countTotalRectsAutoMatched;
+    		precision = (float)countCorrect / countAuto; precision = (float) (((int)(precision*1000+0.5))/10.0);
+    		recall = (float)countCorrect / countGT; recall = (float) (((int)(recall*1000+0.5))/10.0);
+    		pw.println(item + "\t" + countGT + "\t" + countAuto + "\t" + countCorrect + "\t" + precision + "\t" + recall);
+    		
+    		pw.println();
+
+    		//Missing Panels:
+    		pw.println("Total Missing: " + (countTotalRectGT - countTotalRectsAutoMatched));
+    		pw.println("Total False Alarm: " + (countTotalRectsAuto - countTotalRectsAutoMatched));
+    		for (int i = 0; i < autoMatchedRects.size(); i++)
+    		{
+    			if (autoMatchedRects.get(i).size() == gtRects.get(i).size() && autoMatchedRects.get(i).size() == autoRects.get(i).size()) continue; //All correct, we don't care.
+    			pw.println(matchedIDs.get(i));
+    			pw.println("\t" + "GT Rects:\t" + gtRects.get(i).size());
+    			pw.println("\t" + "Auto Rects:\t" + autoRects.get(i).size());
+    			pw.println("\t" + "Matched Rects:\t" + autoMatchedRects.get(i).size());
+    		}
+    		
+    	} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
+	}
+	
 	/**
 	 * Match have auto segmentation and gt segmentation pairs. 
 	 * Results are save in matchedIDs, matchedAutoPanels, and matchedGtPanels.
@@ -401,7 +515,7 @@ public class PanelSegEval
 		Path path = allPaths.get(i);		PanelSeg segmentor = segmentors.get(i);
 		
 		String filename = path.toString();
-//		if (!filename.endsWith("1471-2474-7-36-1.jpg"))
+//		if (!filename.endsWith("1743-422X-6-205-9.jpg"))
 //			return;
 		
 		System.out.println("Processing "+ i + " "  + filename);
@@ -570,11 +684,15 @@ public class PanelSegEval
 			System.out.println("Jaylene		Jaylene's method based on cross uniform band");
 			System.out.println("Santosh		Santosh's method based on long line segments");
 			System.out.println("Daekeun		Daekeun method (Panel Splitter)");
+			System.out.println();
 			System.out.println("PanelSegJS	Panel Segmentation by calling Jaylene's and Santosh's methods, and then fuse them");
+			System.out.println();
 			System.out.println("LabelRegMSER	MSER method for recognizing Label candidate regions");
 			System.out.println("LabelRegHoG	HoG method for recognizing Label candidate regions");
 			System.out.println("LabelRegHoGSvm	HoG method followed by SVM classification for recognizing Label candidate regions");
 			System.out.println("LabelRegHoGSvmBeam	HoG method followed by SVM classification and then Beam Search for recognizing Label sequences and their regions");
+			System.out.println();
+			System.out.println("Complete1	Combining Jaylene and LabelRegHoGSvmBeam methods");
 			return;
 		}
 		
@@ -596,11 +714,15 @@ public class PanelSegEval
 		case "Jaylene": break;
 		case "Santosh": break;
 		case "Daekeun": break;
+		
 		case "PanelSegJS": break;
+		
 		case "LabelRegMSER": break;
 		case "LabelRegHoG": break;
 		case "LabelRegHoGSvm": break;
 		case "LabelRegHoGSvmBeam": break;
+
+		case "Complete1": break;
 		default: System.out.println(method + " is not known.");	return;
 		}
 		

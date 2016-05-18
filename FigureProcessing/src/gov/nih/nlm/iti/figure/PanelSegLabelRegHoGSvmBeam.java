@@ -33,10 +33,13 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 	private void mergeRecognitionLabelsBeam() 
 	{
 		if (figure.panelSegResult.size() == 0) return;
-		
+
 		BeamLines horiLines = beamSearchHori();
 		BeamLines vertLines = beamSearchVert();
 
+		//Reset segmentationResult
+		figure.panelSegResult = new ArrayList<PanelSegInfo>();
+		
 		if (horiLines == null && vertLines == null) return;
 		
 		BeamLines lines = null;
@@ -44,8 +47,6 @@ public class PanelSegLabelRegHoGSvmBeam extends PanelSegLabelRegHoGSvm
 		else if (vertLines == null)		lines = horiLines;
 		else 							lines = horiLines.logProb >= vertLines.logProb ? horiLines : vertLines;
 		
-		//Reset segmentationResult
-		figure.panelSegResult = new ArrayList<PanelSegInfo>();
 		ArrayList<PanelSegInfo> panels = FinalCheck(lines);
 		if (panels != null)	figure.panelSegResult.addAll(panels);
 	}

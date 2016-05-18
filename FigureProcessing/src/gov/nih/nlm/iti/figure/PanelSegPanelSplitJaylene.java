@@ -25,8 +25,7 @@ public final class PanelSegPanelSplitJaylene extends PanelSegPanelSplit
 	
 	private void segment()
 	{
-		figure = new Figure(matImage);	//Construct a figure object for saving processing results
-		figure.panelSegResult = new ArrayList<PanelSegInfo>();
+		preSegment(matImage);
 
 		PanelSplitter extractPanel = new PanelSplitter(bufferedImage);	//Construct Jaylene's panel object for calling her segmentation method
 		extractPanel.removeLabel();

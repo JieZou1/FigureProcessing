@@ -20,10 +20,15 @@ import org.bytedeco.javacpp.opencv_core.*;
 
 public class PanelSegPanelSplitJS extends PanelSegPanelSplit
 {
-	ArrayList<UniformBand> uniformBands;
+	PanelSegPanelSplitJaylene jaylene;
+	PanelSegPanelSplitSantosh santosh;
 	
-	public static void Initialize() 
+	ArrayList<UniformBand> uniformBands;
+
+	public PanelSegPanelSplitJS()
 	{
+		jaylene = new PanelSegPanelSplitJaylene();
+		santosh = new PanelSegPanelSplitSantosh();
 	}
 	
 	public void segment(String image_file_path) 
@@ -36,7 +41,9 @@ public class PanelSegPanelSplitJS extends PanelSegPanelSplit
 	{
 		preSegment(image);
 		
-		DetectUniformBand(5, 15.0, 15.0, 200, 200, true);
+		jaylene.segment(image);
+		
+		figure.panelSegResult = jaylene.figure.panelSegResult;
 	}
 
 	public Mat getUniformBandInMat() 
