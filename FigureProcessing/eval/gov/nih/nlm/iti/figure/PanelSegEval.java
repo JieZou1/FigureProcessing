@@ -515,8 +515,8 @@ public class PanelSegEval
 		Path path = allPaths.get(i);		PanelSeg segmentor = segmentors.get(i);
 		
 		String filename = path.toString();
-//		if (!filename.endsWith("1743-422X-6-205-9.jpg"))
-//			return;
+		if (!filename.endsWith("bcr1611-1.jpg"))
+			return;
 		
 		System.out.println("Processing "+ i + " "  + filename);
 		segmentor.segment(filename);
@@ -706,9 +706,8 @@ public class PanelSegEval
 		if (Files.exists(rst_path))	FileUtils.cleanDirectory(rst_path.toFile());
 		else						Files.createDirectory(rst_path);
 
-		System.out.println("Initialize ... ");
-		
 		String method = args[0];
+		System.out.println("Initialize ... " + method);
 		switch (method) 
 		{
 		case "Jaylene": break;

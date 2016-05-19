@@ -107,3 +107,4 @@ class PanelSegLabelRegHoGSvm extends PanelSegLabelRegHoG
         figure.panelSegResult = RemoveOverlappedCandidates(candidates);
 	}
 }
+

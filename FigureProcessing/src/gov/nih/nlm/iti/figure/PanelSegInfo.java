@@ -76,3 +76,15 @@ class LabelRectTopAscending implements Comparator<PanelSegInfo>
 	}
 	
 }
+
+class PanelLabelAscending implements Comparator<PanelSegInfo>
+{
+	@Override
+	public int compare(PanelSegInfo o1, PanelSegInfo o2) 
+	{
+		int diff = o1.panelLabel.compareTo(o2.panelLabel);
+		if (diff > 0) return 1;
+		else if (diff == 0) return 0;
+		else return -1;
+	}
+}
