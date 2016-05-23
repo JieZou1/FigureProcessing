@@ -8,6 +8,7 @@ import static org.bytedeco.javacpp.opencv_imgproc.boundingRect;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.util.Comparator;
 
 import org.bytedeco.javacpp.opencv_core.Mat;
 import org.bytedeco.javacpp.opencv_core.Rect;
@@ -162,3 +163,79 @@ public class AlgorithmEx
 		return maxIndex;
 	}
 }
+
+/**
+ * Comparator for sorting PanelSegInfo in reverse order of labelScore.
+ * @author Jie Zou
+ */
+class LabelScoreDescending implements Comparator<PanelSegInfo>
+{
+	@Override
+	public int compare(PanelSegInfo o1, PanelSegInfo o2) 
+	{
+		double diff = o2.labelScore - o1.labelScore;
+		if (diff > 0) return 1;
+		else if (diff == 0) return 0;
+		else return -1;
+	}
+	
+}
+
+/**
+* Comparator for sorting PanelSegInfo vertically based on the LabelRect.Left
+* @author Jie Zou
+*/
+class LabelRectLeftAscending implements Comparator<PanelSegInfo>
+{
+	@Override
+	public int compare(PanelSegInfo o1, PanelSegInfo o2) 
+	{
+		double diff = o1.labelRect.x - o2.labelRect.x;
+		if (diff > 0) return 1;
+		else if (diff == 0) return 0;
+		else return -1;
+	}
+	
+}
+
+/**
+ * Comparator for sorting PanelSegInfo horizontally based on the LabelRect.Top
+ * @author Jie Zou
+ */
+class LabelRectTopAscending implements Comparator<PanelSegInfo>
+{
+	@Override
+	public int compare(PanelSegInfo o1, PanelSegInfo o2) 
+	{
+		double diff = o1.labelRect.y - o2.labelRect.y;
+		if (diff > 0) return 1;
+		else if (diff == 0) return 0;
+		else return -1;
+	}
+	
+}
+
+class PanelLabelAscending implements Comparator<PanelSegInfo>
+{
+	@Override
+	public int compare(PanelSegInfo o1, PanelSegInfo o2) 
+	{
+		int diff = o1.panelLabel.compareTo(o2.panelLabel);
+		if (diff > 0) return 1;
+		else if (diff == 0) return 0;
+		else return -1;
+	}
+}
+
+class RectangleTopAscending implements Comparator<Rectangle>
+{
+	@Override
+	public int compare(Rectangle o1, Rectangle o2) 
+	{
+		double diff = o1.y - o2.y;
+		if (diff > 0) return 1;
+		else if (diff == 0) return 0;
+		else return -1;
+	}
+}
+
