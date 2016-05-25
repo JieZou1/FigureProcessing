@@ -33,7 +33,7 @@ public class PanelSegComplete1 extends PanelSegComplete
 		//MergeTrivial();
 		if (!MergeFromLabels())
 		{
-			MergeOtherCases();
+			MergeFromJaylene();
 		}
 		
 		
@@ -42,7 +42,7 @@ public class PanelSegComplete1 extends PanelSegComplete
 	/**
 	 * Trivial method to combine results, simply to add results from all methods
 	 */
-	//@SuppressWarnings("unused")
+	@SuppressWarnings("unused")
 	private void MergeTrivial()
 	{
 		figure.panelSegResult = new ArrayList<PanelSegInfo>();
@@ -51,6 +51,10 @@ public class PanelSegComplete1 extends PanelSegComplete
 		figure.panelSegResult.addAll(labelHoGSvm.figure.panelSegResult);
 	}
 	
+	/**
+	 * We assume Labels are correctly found, and we modify Jaylene's result to fit label results
+	 * @return
+	 */
 	private boolean MergeFromLabels()
 	{
 		//collect labels from labelHoGSvm
@@ -351,9 +355,16 @@ public class PanelSegComplete1 extends PanelSegComplete
 		
 	}
 
-	private void MergeOtherCases()
+	/**
+	 * We assume Jaylene's result (Panel Splitting) is correct, So 
+	 * By forcing each Panel containing only one label, we can remove a lot of label false alarms.
+	 */
+	private void MergeFromJaylene()
 	{
-		MergeTrivial();
+		//TODO:
+		//1. For each panel, find its label candidates. Some panel may contain more than one labels, and some may not contain labels.
+		//2. Use beam search to find the optimal panel-label sequence (one panel could contain 0 or 1 labels only)
+		
 	}
 	
 	
