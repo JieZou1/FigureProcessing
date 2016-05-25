@@ -215,12 +215,16 @@ class LabelRectTopAscending implements Comparator<PanelSegInfo>
 	
 }
 
+/**
+ * Comparator for sorting PanelSegInfo based on the panelLabel. The case is ignored.
+ * @author Jie Zou
+ */
 class PanelLabelAscending implements Comparator<PanelSegInfo>
 {
 	@Override
 	public int compare(PanelSegInfo o1, PanelSegInfo o2) 
 	{
-		int diff = o1.panelLabel.compareTo(o2.panelLabel);
+		int diff = o1.panelLabel.toLowerCase().compareTo(o2.panelLabel.toLowerCase());
 		if (diff > 0) return 1;
 		else if (diff == 0) return 0;
 		else return -1;
