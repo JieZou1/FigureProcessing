@@ -16,8 +16,6 @@ public class PanelSegComplete1 extends PanelSegComplete
 		jaylene = new PanelSegPanelSplitJaylene();
 		santosh = new PanelSegPanelSplitSantosh();
 		labelHoGSvm = new PanelSegLabelRegHoGSvm();
-		
-
 	}
 	
 	@Override
@@ -29,13 +27,28 @@ public class PanelSegComplete1 extends PanelSegComplete
 		santosh.segment(image);
 		labelHoGSvm.segment(image);
 		
-		//Combine the results from the 3 methods
-		//MergeTrivial();
-		if (!MergeFromLabels())
+		Merge();
+		
+		//Reach Here, the panels and their labels are matched.
+		//Either all panels contain labels or none panels contain labels.
+		//If panel contain label, it contains only one label.
+		
+		//TODO: 
+		//1. sort panels according to their labels
+		//2. Make panelRect contains labelRect.
+	}
+	
+	private void Merge()
+	{
+		if (FoundTrustworthyLabelSequence())
 		{
-			MergeFromJaylene();
+			MergeFromLabels();
 		}
 		
+		//Combine the results from the 3 methods
+		if (MergeFromLabels()) return;
+			
+		MergeFromJaylene();
 		
 	}
 
@@ -51,11 +64,7 @@ public class PanelSegComplete1 extends PanelSegComplete
 		figure.panelSegResult.addAll(labelHoGSvm.figure.panelSegResult);
 	}
 	
-	/**
-	 * We assume Labels are correctly found, and we modify Jaylene's result to fit label results
-	 * @return
-	 */
-	private boolean MergeFromLabels()
+	private boolean FoundTrustworthyLabelSequence()
 	{
 		//collect labels from labelHoGSvm
 		labelHoGSvm.figure.panelSegResult.sort(new PanelLabelAscending());
@@ -67,13 +76,85 @@ public class PanelSegComplete1 extends PanelSegComplete
 		}
 		if (labels.size() <= 1) return false;
 		
-		char ch = 'a'; 
-		for (int i = 0; i < labels.size(); i++)
-		{
-			if (labels.get(i) != ch) return false;
-			ch++;
+		{//If it is a sequence from 'a' continuously without any missing characters, it is trustworthy. 
+			char ch; int i; 
+			for (ch = 'a', i = 0; i < labels.size(); i++, ch++)
+			{
+				if (labels.get(i) != ch) break;
+			}
+			if (i == labels.size()) return true;
 		}
 		
+		//Reach Here: it is not a continuous labels, we try find a trustworthy label sequence based on its positions.
+		//Basically, we assume the adjacent labels must align horizontally or vertically.
+		//1. We break into 'a', 'b', 'c', ...
+		ArrayList<ArrayList<PanelSegInfo>> a_to_z = new ArrayList<ArrayList<PanelSegInfo>>();
+		for (int i = 'a'; i <= 'z'; i++) {	a_to_z.add(new ArrayList<PanelSegInfo>());		}
+		for (int i = 0; i < labels.size(); i++)
+		{
+			char label = labels.get(i);
+			a_to_z.get(label).add(labelHoGSvm.figure.panelSegResult.get(i));
+		}
+		//2. We use beam search to try finding an optimal (minimum aligning distance) sequence
+		ArrayList<ArrayList<ArrayList<PanelSegInfo>>> path = new ArrayList<ArrayList<ArrayList<PanelSegInfo>>>();
+		ArrayList<ArrayList<Integer>> path_distance = new ArrayList<ArrayList<Integer>>();
+		for (int i = 'a'; i <= 'z'; i++) 
+		{	
+			path.add(new ArrayList<ArrayList<PanelSegInfo>>());	
+			path_distance.add(new ArrayList<Integer>());	
+		}
+		//Set the path of the first label
+		int first_char = 0;	for (int i = 0; i < a_to_z.size(); i++)	if (a_to_z.get(i).size() > 0) {first_char = i; break;}
+		for (int i = 0; i < a_to_z.get(first_char).size(); i++)
+		{
+			ArrayList<PanelSegInfo> segment = new ArrayList<PanelSegInfo>();			
+			segment.add(a_to_z.get(first_char).get(i));
+			path.get(first_char).add(segment);
+			path_distance.get(first_char).add(0);
+		}
+		for (int k = first_char + 1; k < a_to_z.size(); k++)
+		{
+			ArrayList<ArrayList<PanelSegInfo>> prev_nodes = path.get(k - 1);
+			ArrayList<Integer> prev_distances = path_distance.get(k - 1);
+			for (int i = 0; i < a_to_z.get(k).size(); i++)
+			{
+				PanelSegInfo panel = a_to_z.get(k).get(i);
+				for (int m = 0; m < prev_nodes.size(); m++)
+				{
+					ArrayList<PanelSegInfo> prev_node = prev_nodes.get(m);
+					int min_distance = Integer.MAX_VALUE; int min_n = 0;
+					for (int n = 0; n < prev_node.size(); n++)
+					{
+						PanelSegInfo prev_panel = prev_node.get(i);
+						int dis_h = Math.abs(panel.labelRect.x - prev_panel.labelRect.x) + 
+									Math.abs((panel.labelRect.x + panel.labelRect.width) - (prev_panel.labelRect.x + prev_panel.labelRect.width));
+						int dis_v = Math.abs(panel.labelRect.y - prev_panel.labelRect.y) + 
+									Math.abs((panel.labelRect.y + panel.labelRect.height) - (prev_panel.labelRect.y + prev_panel.labelRect.height));
+						int distance = Math.min(dis_h, dis_v);
+						if (distance < min_distance) { min_n = n; min_distance = distance; }
+					}
+					if (min_distance > panel.labelRect.width || min_distance > panel.labelRect.height) continue;
+					
+					ArrayList<PanelSegInfo> segment = new ArrayList<PanelSegInfo>();
+					segment.addAll(prev_node);	segment.add(panel);
+					
+				}
+				
+				ArrayList<PanelSegInfo> segment = new ArrayList<PanelSegInfo>();			
+				segment.add(a_to_z.get(first_char).get(i));
+				path.get(first_char).add(segment);
+				path_distance.get(first_char).add(0);
+			}
+		}
+		
+		ArrayList<PanelSegInfo> trustworthy_labels = new ArrayList<PanelSegInfo>();
+		
+		
+		return false;
+	}
+	
+	private boolean MergeFromLabels()
+	{
 		//To here, the labels detected are trustworthy. We find the closest panels and assign it to the corresponding label
 		//We may need to break or merge panels.
 		//1. Find the closet jaylene-panel to each label-panel
@@ -205,202 +286,23 @@ public class PanelSegComplete1 extends PanelSegComplete
 	}
 	
 	/**
-	 * The panel contains more than one labels, we need to split the panel to contain each individual labels. 
-	 * @param panel
-	 * @param labels
-	 * @return
-	 */
-	private ArrayList<PanelSegInfo> SplitPanel(Rectangle panel_rect, ArrayList<PanelSegInfo> labels)
-	{
-		//Break them into lines
-		ArrayList<ArrayList<PanelSegInfo>> lines = new ArrayList<ArrayList<PanelSegInfo>>();
-		ArrayList<Rectangle> line_rects = new ArrayList<Rectangle>();
-		for (int i = 0; i < labels.size(); i++)
-		{
-			PanelSegInfo label = labels.get(i);			Rectangle label_rect = label.labelRect;			int index = -1;
-			for (int j = 0; j < line_rects.size(); j++)
-			{
-				Rectangle line_rect = line_rects.get(j);
-				int v_distance = vDistance(label_rect,line_rect);
-				if (v_distance == 0)
-				{
-					index = j; break;
-				}				
-			}
-			if (index >= 0)
-			{
-				Rectangle rect = label_rect.union(line_rects.get(index));
-				line_rects.set(index, rect);
-				lines.get(index).add(label);
-			}
-			else
-			{
-				Rectangle rect = (Rectangle) label_rect.clone();
-				line_rects.add(rect);
-				ArrayList<PanelSegInfo> line = new ArrayList<PanelSegInfo>(); line.add(label);
-				lines.add(line);
-			}
-		}
-
-		if (lines.size() > 1)
-		{	//We need to do a vertical split
-			line_rects.sort(new RectangleTopAscending()); //Sort line_rects
-			
-			Rectangle rect_first = line_rects.get(0);
-			Rectangle rect_last = line_rects.get(line_rects.size()-1);
-			int distance_to_top = rect_first.y - panel_rect.y;
-			int distance_to_bottom = (panel_rect.y + panel_rect.height) - (rect_last.y + rect_last.height);
-			int averge_line_height = panel_rect.height / lines.size();
-			
-			if (distance_to_top < averge_line_height / 4 && distance_to_bottom > averge_line_height / 2)
-			{	//Aligned at top
-				for (int i = 0; i < lines.size(); i++)
-				{
-					int y0 = i == 0 ? panel_rect.y : line_rects.get(i).y - distance_to_top; 
-					int y1 = i == lines.size() - 1 ? panel_rect.y + panel_rect.height : line_rects.get(i+1).y - distance_to_top;
-					Rectangle rect0 = new Rectangle(panel_rect.x, y0, panel_rect.width, y1 - y0);
-					line_rects.set(i, rect0);
-				}
-			}
-			else if (distance_to_bottom < averge_line_height / 4 && distance_to_top > averge_line_height / 2)
-			{	//Aligned at bottom
-				for (int i = 0; i < lines.size(); i++)
-				{
-					int y0 = i == 0 ? panel_rect.y : line_rects.get(i - 1).y + line_rects.get(i - 1).height; 
-					int y1 = i == lines.size() - 1 ? panel_rect.y + panel_rect.height : line_rects.get(i).y + line_rects.get(i).height + distance_to_bottom;
-					Rectangle rect0 = new Rectangle(panel_rect.x, y0, panel_rect.width, y1 - y0);
-					line_rects.set(i, rect0);
-				}
-			}
-			else
-			{	//Aligned in the middle or other cases
-				for (int i = 0; i < lines.size(); i++)
-				{
-					int y0 = i == 0 ? panel_rect.y : (line_rects.get(i - 1).y + line_rects.get(i).y)/2; 
-					int y1 = i == lines.size() - 1 ? panel_rect.y + panel_rect.height : (line_rects.get(i).y + line_rects.get(i + 1).y)/2;
-					Rectangle rect0 = new Rectangle(panel_rect.x, y0, panel_rect.width, y1 - y0);
-					line_rects.set(i, rect0);
-				}				
-			}			
-		}
-		else
-		{
-			line_rects.set(0, panel_rect);
-		}
-		
-		//Horizontal split in each line, and complete the process
-		ArrayList<PanelSegInfo> panels = new ArrayList<PanelSegInfo>();
-		for (int i = 0; i < lines.size(); i++)
-		{
-			Rectangle line_rect = line_rects.get(i);
-			ArrayList<PanelSegInfo> line = lines.get(i);
-			if (line.size() > 1)
-			{	//Horizontal split
-				//Break into columns
-				ArrayList<Rectangle> column_rects = new ArrayList<Rectangle>();
-				for (int j = 0; j < line.size(); j++)	column_rects.add(line.get(j).labelRect);
-				Rectangle rect_first = column_rects.get(0);
-				Rectangle rect_last = column_rects.get(column_rects.size()-1);
-				int distance_to_left = rect_first.x - panel_rect.x;
-				int distance_to_right = (panel_rect.x + panel_rect.width) - (rect_last.x + rect_last.width);
-				int averge_column_width = line_rect.width / line.size();
-				
-				if (distance_to_left < averge_column_width / 4 && distance_to_right > averge_column_width / 2)
-				{	//Aligned at left
-					for (int j = 0; j < line.size(); j++)
-					{
-						int x0 = j == 0 ? line_rect.x : column_rects.get(j).x - distance_to_left; 
-						int x1 = j == line.size() - 1 ? line_rect.x + line_rect.width : column_rects.get(j+1).x - distance_to_left;
-						Rectangle rect0 = new Rectangle(x0, line_rect.y, x1 - x0, line_rect.height);
-						column_rects.set(j, rect0);
-					}
-				}
-				else if (distance_to_right < averge_column_width / 4 && distance_to_left > averge_column_width / 2)
-				{	//Aligned at right
-					for (int j = 0; j < line.size(); j++)
-					{
-						int x0 = j == 0 ? line_rect.x : column_rects.get(j - 1).x + column_rects.get(j - 1).width; 
-						int x1 = j == line.size() - 1 ? line_rect.x + line_rect.width : column_rects.get(j).x + column_rects.get(j).width + distance_to_right;
-						Rectangle rect0 = new Rectangle(x0, line_rect.y, x1-x0, line_rect.height);
-						column_rects.set(j, rect0);
-					}
-				}
-				else
-				{	//Aligned in the middle or other cases
-					for (int j = 0; j < line.size(); j++)
-					{
-						int x0 = j == 0 ? line_rect.x : (column_rects.get(j - 1).x + column_rects.get(j - 1).width); 
-						int x1 = j == line.size() - 1 ? line_rect.x + line_rect.width : (column_rects.get(j).x + column_rects.get(j + 1).x)/2;
-						Rectangle rect0 = new Rectangle(x0, line_rect.y, x1 - x0, line_rect.height);
-						column_rects.set(j, rect0);
-					}				
-				}
-				
-				for (int j = 0; j < line.size(); j++)
-				{
-					PanelSegInfo panel = line.get(j);
-					panel.panelRect = column_rects.get(j);
-					panels.add(panel);
-				}
-			}
-			else 
-			{
-				PanelSegInfo panel = line.get(0);
-				panel.panelRect = line_rect;
-				panels.add(panel);
-			}
-		}
-		
-		return panels;
-		
-	}
-
-	/**
 	 * We assume Jaylene's result (Panel Splitting) is correct, So 
 	 * By forcing each Panel containing only one label, we can remove a lot of label false alarms.
 	 */
-	private void MergeFromJaylene()
+	private boolean MergeFromJaylene()
 	{
 		//TODO:
 		//1. For each panel, find its label candidates. Some panel may contain more than one labels, and some may not contain labels.
+		
+		for (int i = 0; i < labelHoGSvm.figure.panelSegResult.size(); i++)
+		{
+			PanelSegInfo label_panel = labelHoGSvm.figure.panelSegResult.get(i);
+			
+		}
+		
 		//2. Use beam search to find the optimal panel-label sequence (one panel could contain 0 or 1 labels only)
 		
-	}
-	
-	
-	/**
-	 * Calculate the distance between 2 rects. 
-	 * rect_label and rect_panel do not intersect
-	 * @param panel
-	 */
-	int distance(Rectangle label_rect, Rectangle panel_rect)
-	{
-		int v_distance = 0;
-		if (label_rect.y >= panel_rect.y + panel_rect.height) v_distance =  label_rect.y - (panel_rect.y + panel_rect.height); //label rect is below panel rect
-		else if (label_rect.y + label_rect.height <= panel_rect.y) v_distance =  panel_rect.y - (label_rect.y + label_rect.height); //label rect is above panel rect
-		
-		int h_distance = 0;
-		if (label_rect.x >= panel_rect.x + panel_rect.width) h_distance =  label_rect.x - (panel_rect.x + panel_rect.width); //label rect is to the right of panel rect
-		else if (label_rect.x + label_rect.width <= panel_rect.x) h_distance =  panel_rect.x - (label_rect.x + label_rect.width); //label rect is to the left of panel rect
-		
-		return v_distance + h_distance;
-	}
-	
-	int vDistance(Rectangle label_rect, Rectangle panel_rect)
-	{
-		int v_distance = 0;
-		if (label_rect.y >= panel_rect.y + panel_rect.height) v_distance =  label_rect.y - (panel_rect.y + panel_rect.height); //label rect is below panel rect
-		else if (label_rect.y + label_rect.height <= panel_rect.y) v_distance =  panel_rect.y - (label_rect.y + label_rect.height); //label rect is above panel rect
-		return v_distance;
-	}
-
-	int hDistance(Rectangle label_rect, Rectangle panel_rect)
-	{
-		int h_distance = 0;
-		if (label_rect.x >= panel_rect.x + panel_rect.width) h_distance =  label_rect.x - (panel_rect.x + panel_rect.width); //label rect is to the right of panel rect
-		else if (label_rect.x + label_rect.width <= panel_rect.x) h_distance =  panel_rect.x - (label_rect.x + label_rect.width); //label rect is to the left of panel rect
-		
-		return h_distance;
+		return true;
 	}
 }
 

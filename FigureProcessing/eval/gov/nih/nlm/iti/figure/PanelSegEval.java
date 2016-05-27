@@ -73,6 +73,7 @@ public class PanelSegEval
 				case "LabelRegHoGSvm": segmentors.add(new PanelSegLabelRegHoGSvm());break;
 				case "LabelRegHoGSvmBeam": segmentors.add(new PanelSegLabelRegHoGSvmBeam());break;
 
+				case "Complete0": segmentors.add(new PanelSegComplete0());break;
 				case "Complete1": segmentors.add(new PanelSegComplete1());break;
 				}
 			}
@@ -692,7 +693,8 @@ public class PanelSegEval
 			System.out.println("LabelRegHoGSvm	HoG method followed by SVM classification for recognizing Label candidate regions");
 			System.out.println("LabelRegHoGSvmBeam	HoG method followed by SVM classification and then Beam Search for recognizing Label sequences and their regions");
 			System.out.println();
-			System.out.println("Complete1	Combining Jaylene and LabelRegHoGSvmBeam methods");
+			System.out.println("Complete0	Combining Jaylene and LabelRegHoGSvmBeam methods");
+			System.out.println("Complete1	Combining Jaylene and LabelRegHoGSvm methods, use more complicated merge method, not completed yet");
 			return;
 		}
 		
@@ -721,6 +723,7 @@ public class PanelSegEval
 		case "LabelRegHoGSvm": break;
 		case "LabelRegHoGSvmBeam": break;
 
+		case "Complete0": break;
 		case "Complete1": break;
 		default: System.out.println(method + " is not known.");	return;
 		}
