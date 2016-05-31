@@ -516,7 +516,7 @@ public class PanelSegEval
 		Path path = allPaths.get(i);		PanelSeg segmentor = segmentors.get(i);
 		
 		String filename = path.toString();
-//		if (!filename.endsWith("1471-213X-9-37-4.jpg"))
+//		if (!filename.endsWith("1471-2121-8-52-2.jpg"))
 //			return;
 		
 		System.out.println("Processing "+ i + " "  + filename);

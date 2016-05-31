@@ -24,6 +24,12 @@ public class PanelSegComplete0 extends PanelSegComplete
 		jaylene.segment(image);
 		labelHoGSvmBeam.segment(image);
 		
+		if (labelHoGSvmBeam.figure.panelSegResult.size() == 0)
+		{	//No label so we use jaylene's result
+			figure.panelSegResult = jaylene.figure.panelSegResult;
+			return;
+		}
+		
 		MergeFromLabels();
 	}
 	
