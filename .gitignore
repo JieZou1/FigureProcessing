@@ -18,9 +18,10 @@ local.properties
 temp/
 jar/
 doc/
+downloads/
 .recommenders/
-evaluation.txt
 *.jpage
+evaluation.txt
 
 # External tool builders
 .externalToolBuilders/

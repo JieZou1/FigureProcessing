@@ -34,7 +34,7 @@ public class FigureDownload
 	public static void main(String args[]) throws Exception{
 		//Stop and print error msg if no agruments passed.
 		if(args.length < 3){
-			System.out.println("Usage: java <jar> gov.nih.nlm.util.GetQueryImages <query-string> <output-dir> <image-prefix>");
+			System.out.println("Usage: java -jar FigureDownload.jar <query-string> <output-dir> <image-prefix>");
 			System.exit(0);
 		}
 		
@@ -47,9 +47,7 @@ public class FigureDownload
 		String imagePrefix = args[2];
 		
 		//Variables to store the JSON pagination params and image urls.
-		int m = 0;
-		int n = 0;
-		int total = 100;
+		int m = 0, n = 0, total = 100;
 		HashSet<String> imageSet = new HashSet<String>();
 
 		System.out.println("Query String: " + queryString);
@@ -76,6 +74,10 @@ public class FigureDownload
 	        //Close connection after reading.
 	        in.close();
 	        
+	        //save response to JSON file
+//	        String responseString = response.toString();
+//	        Files.write(Paths.get("./test.json"), responseString.getBytes());
+	        
 	        JSONObject jsonObj = (JSONObject) JSONSerializer.toJSON(response.toString());
 	        
 	        JSONArray imgArr = (JSONArray) jsonObj.get("list");
@@ -99,7 +101,7 @@ public class FigureDownload
 		System.out.println("Output directory to save images: " + outputDirPath);
 		
 		int counter = 0;
-		File outputDir = new File(outputDirPath);
+		//File outputDir = new File(outputDirPath);
 		
 		//Download the images.
 		for(String eachQueryImage : imageSet)
