@@ -57,7 +57,7 @@ public class PanelSegEval
 			for (Path path : dirStrm)
 			{
 				String filename = path.toString();
-				if (!filename.endsWith(".jpg")) continue;
+				if (!filename.endsWith(".jpg") && !filename.endsWith(".png")) continue;
 				
 				allPaths.add(path);
 				switch (method) 
@@ -592,7 +592,11 @@ public class PanelSegEval
 			// 2.2 Save result in xml files
 			ArrayList<PanelSegInfo> xml_result = segmentor.getSegmentationResult();
 			String xml = xStream.toXML(xml_result);
-			String xml_file = rstFolder.resolve(path.getFileName()).toString().replace(".jpg", ".xml");
+			String xml_file = "";
+			if (path.getFileName().toString().endsWith(".jpg"))
+				xml_file = rstFolder.resolve(path.getFileName()).toString().replace(".jpg", ".xml");
+			else if (path.getFileName().toString().endsWith(".png")) 
+				xml_file = rstFolder.resolve(path.getFileName()).toString().replace(".png", ".xml");
 			try (FileWriter fw = new FileWriter(xml_file))
 			{
 				fw.write(xml);
