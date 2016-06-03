@@ -149,7 +149,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 			Node textNode = AlgorithmEx.getChildNode(blockTextNode, "Text");
 			String text = textNode.getTextContent().toLowerCase();
 			
-			if (text.startsWith("panel "))
+			if (text.startsWith("panel"))
 			{	//It is a panel
 				Node dataNode = AlgorithmEx.getChildNode(shapeNode, "Data");
 				Node extentNode = AlgorithmEx.getChildNode(dataNode, "Extent");
@@ -161,11 +161,11 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 				
 				PanelSegInfo panel = new PanelSegInfo();
 				panel.panelRect = new Rectangle(x, y, width + 1, height + 1); //Looks like that iPhotoDraw uses [] for range instead of [)
-				String[] words = text.split("\\s+"); 
+				String[] words = text.split("\\s+");
 				panel.panelLabel = String.join(" ", ArrayUtils.remove(words, 0));
 				panels.add(panel);
 			}
-			else
+			else if (text.startsWith("label"))
 			{	//It is a label
 				Node dataNode = AlgorithmEx.getChildNode(shapeNode, "Data");
 				Node extentNode = AlgorithmEx.getChildNode(dataNode, "Extent");
@@ -180,6 +180,10 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 				String[] words = text.split("\\s+"); 
 				labelNames.add(String.join(" ", ArrayUtils.remove(words, 0)));				
 			}			
+			else 
+			{
+				throw new Exception("Load Annotation Error: Unknown annotation, " + text + ", in " + gt_xml_file +  "!");
+			}
 		}
 		
 		//Match labels to panels
@@ -200,7 +204,7 @@ public abstract class PanelSeg extends gov.nih.nlm.iti.figure.Algorithm
 			
 			if (found)	continue;
 			
-			throw new Exception("Load Ground Truth Error: Not able to find matching Panel for Label " + labelName + " in " + gt_xml_file + "!");
+			throw new Exception("Load Annotation Error: Not able to find matching Panel for Label " + labelName + " in " + gt_xml_file + "!");
 			
 			//Not found by matching labels, we check with intersections
 //			Rectangle labelRect = labelRects.get(i);
