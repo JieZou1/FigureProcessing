@@ -5,6 +5,8 @@ import java.util.ArrayList;
 
 import org.bytedeco.javacpp.opencv_core.Mat;
 
+import weka.gui.PropertyPanel;
+
 public class PanelSegComplete0 extends PanelSegComplete 
 {
 	PanelSegPanelSplitJaylene jaylene;
@@ -20,6 +22,12 @@ public class PanelSegComplete0 extends PanelSegComplete
 	public void segment(Mat image) 
 	{
 		preSegment(image);	//Common initializations for all segmentation method.
+//		{
+//		PanelSegInfo panel = new PanelSegInfo();
+//		panel.panelRect = new Rectangle(0, 0, image.cols(), image.rows());
+//		figure.panelSegResult.add(panel);
+//		return;
+//		}
 
 		jaylene.segment(image);
 		labelHoGSvmBeam.segment(image);
@@ -31,6 +39,13 @@ public class PanelSegComplete0 extends PanelSegComplete
 		}
 		
 		MergeFromLabels();
+		
+		if (labelHoGSvmBeam.figure.panelSegResult.size() == 0)
+		{	//For some reason, no panel is generated, we create a panel, include all figure.
+			PanelSegInfo panel = new PanelSegInfo();
+			panel.panelRect = new Rectangle(0, 0, image.cols(), image.rows());
+			labelHoGSvmBeam.figure.panelSegResult.add(panel);
+		}
 	}
 	
 	private boolean MergeFromLabels()
